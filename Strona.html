@@ -14,17 +14,11 @@
     .lightbox-navigation {
       position: absolute;
       top: 50%;
-      left: 0;
-      right: 0;
+      transform: translateY(-50%);
+      width: 100%;
       display: flex;
       justify-content: space-between;
-      transform: translateY(-50%);
       pointer-events: none;
-    }
-
-    .modal-body {
-      position: relative;
-      display: inline-block; /* Ensures it only wraps around the image */
     }
 
     .lightbox-navigation button {
@@ -44,6 +38,33 @@
       color: white;
       font-size: 1.2rem;
     }
+
+    .parallax {
+      height: 400px;
+      background-attachment: fixed;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+
+    .parallax-content {
+      height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
+      font-size: 2rem;
+      text-align: center;
+    }
+
+    #lightbox {
+      padding: 50px 0;
+    }
+
+    #accordion {
+      padding: 50px 0;
+    }
   </style>
 </head>
 <body>
@@ -61,6 +82,9 @@
           </li>
           <li class="nav-item">
             <a class="nav-link" href="#accordion">Accordion</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#parallax">Parallax</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="#lightbox">Lightbox</a>
@@ -145,6 +169,13 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Parallax Section -->
+  <div id="parallax" class="parallax" style="background-image: url('https://via.placeholder.com/1200x800');">
+    <div class="parallax-content">
+      Welcome to the Parallax Section
     </div>
   </div>
 

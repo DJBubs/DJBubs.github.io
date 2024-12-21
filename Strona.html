@@ -14,11 +14,17 @@
     .lightbox-navigation {
       position: absolute;
       top: 50%;
-      transform: translateY(-50%);
-      width: 100%;
+      left: 0;
+      right: 0;
       display: flex;
       justify-content: space-between;
+      transform: translateY(-50%);
       pointer-events: none;
+    }
+
+    .modal-body {
+      position: relative;
+      display: inline-block; /* Ensures it only wraps around the image */
     }
 
     .lightbox-navigation button {

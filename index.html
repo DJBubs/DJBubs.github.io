@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Responsive Website</title>
+  <title>Renault Alpine A110 1600s</title>
+  <link rel="icon" type="image/x-icon" href="Pictures/Renault-logo.png">
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
@@ -14,8 +15,6 @@
     html {
       scroll-behavior: smooth; /* Enable smooth scrolling */
     }
-
-  
 
     .lightbox-navigation {
       position: absolute;
@@ -31,6 +30,10 @@
     .modal-body {
       position: relative;
       display: inline-block; /* Ensures it only wraps around the image */
+    }
+
+    .modal {
+      --bs-modal-width: 800px;
     }
 
     /* .row {
@@ -62,7 +65,7 @@
     }
 
     .parallax {
-      height: 400px;
+      height: 500px;
       background-attachment: fixed;
       background-position: center;
       background-repeat: no-repeat;
@@ -85,7 +88,8 @@
     }
 
     #accordion {
-      padding: 50px 0;
+      padding-top: 50px;
+      padding-bottom: 100px;
     }
     
   </style>
@@ -121,24 +125,24 @@
   <div id="carousel" class="carousel slide" data-bs-ride="carousel">
     <div class="carousel-inner">
       <div class="carousel-item active">
-        <img src="https://via.placeholder.com/1200x400" class="d-block w-100" alt="Slide 1">
+        <img src="Pictures/Alp1.jpg" class="d-block w-100" alt="Slide 1">
         <div class="carousel-caption d-none d-md-block">
-          <h5>Slide 1</h5>
-          <p>Sample text for Slide 1.</p>
+          <h5>1972 Renault Alpine A110 1600s</h5>
+          <p>Source: PistonHeads.com</p>
         </div>
       </div>
       <div class="carousel-item">
-        <img src="https://via.placeholder.com/1200x400" class="d-block w-100" alt="Slide 2">
+        <img src="Pictures/Alp2.jpg" class="d-block w-100" alt="Slide 2">
         <div class="carousel-caption d-none d-md-block">
-          <h5>Slide 2</h5>
-          <p>Sample text for Slide 2.</p>
+          <h5>1972 Renault Alpine A110 1600s</h5>
+          <p>Source: PistonHeads.com</p>
         </div>
       </div>
       <div class="carousel-item">
-        <img src="https://via.placeholder.com/1200x400" class="d-block w-100" alt="Slide 3">
+        <img src="Pictures/Alp3.jpg" class="d-block w-100" alt="Slide 3">
         <div class="carousel-caption d-none d-md-block">
-          <h5>Slide 3</h5>
-          <p>Sample text for Slide 3.</p>
+          <h5>1972 Renault Alpine A110 1600s</h5>
+          <p>Source: PistonHeads.com</p>
         </div>
       </div>
     </div>
@@ -196,29 +200,29 @@
   </div>
 
   <!-- Parallax Section -->
-  <div id="parallax" class="parallax" style="background-image: url('https://via.placeholder.com/1200x800');">
+  <div id="parallax" class="parallax" style="background-image: url('Pictures/Parallax.jpg');">
     <div class="parallax-content">
-      Welcome to the Parallax Section
+
     </div>
   </div>
 
   <!-- Lightbox -->
   <div id="lightbox" class="container mt-5">
-    <h2>Lightbox Gallery</h2>
+    <h2>1973 World Rally Championship</h2>
     <div class="row">
       <div class="col-md-4">
         <a href="#" data-bs-toggle="modal" data-bs-target="#lightboxModal" data-index="0">
-          <img src="https://via.placeholder.com/300x200" class="img-fluid" alt="Thumbnail 1">
+          <img src="Pictures/1973-1.jpg" class="img-fluid" alt="Thumbnail 1">
         </a>
       </div>
       <div class="col-md-4">
         <a href="#" data-bs-toggle="modal" data-bs-target="#lightboxModal" data-index="1">
-          <img src="https://via.placeholder.com/300x200" class="img-fluid" alt="Thumbnail 2">
+          <img src="Pictures/1973-2.jpg" class="img-fluid" alt="Thumbnail 2">
         </a>
       </div>
       <div class="col-md-4">
         <a href="#" data-bs-toggle="modal" data-bs-target="#lightboxModal" data-index="2">
-          <img src="https://via.placeholder.com/300x200" class="img-fluid" alt="Thumbnail 3">
+          <img src="Pictures/1973-3.jpg" class="img-fluid" alt="Thumbnail 3">
         </a>
       </div>
     </div>
@@ -244,9 +248,9 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const images = [
-      "https://via.placeholder.com/1200x800",
-      "https://via.placeholder.com/1200x800",
-      "https://via.placeholder.com/1200x800"
+      "Pictures/1973-1.jpg",
+      "Pictures/1973-2.jpg",
+      "Pictures/1973-3.jpg"
     ];
 
     let currentIndex = 0;

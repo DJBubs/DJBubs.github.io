@@ -15,6 +15,8 @@
       scroll-behavior: smooth; /* Enable smooth scrolling */
     }
 
+  
+
     .lightbox-navigation {
       position: absolute;
       top: 50%;
@@ -29,6 +31,10 @@
     .modal-body {
       position: relative;
       display: inline-block; /* Ensures it only wraps around the image */
+    }
+
+    .lightbox-row {
+      margin-top: 10px;
     }
 
     .lightbox-navigation button {
@@ -192,7 +198,7 @@
   <!-- Lightbox -->
   <div id="lightbox" class="container mt-5">
     <h2>Lightbox Gallery</h2>
-    <div class="row">
+    <div id="lightbox-row" class="row">
       <div class="col-md-4">
         <a href="#" data-bs-toggle="modal" data-bs-target="#lightboxModal" data-index="0">
           <img src="https://via.placeholder.com/300x200" class="img-fluid" alt="Thumbnail 1">

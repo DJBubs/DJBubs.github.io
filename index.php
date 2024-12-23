@@ -177,7 +177,56 @@
   </div>
 
   <!-- Accordion -->
-  <div id="accordion" class="container mt-5">
+  <div class="container mt-5">
+    <h2>World Rally Championship Placements</h2>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Year</th>
+                <th>Rally Name</th>
+                <th>Placement</th>
+            </tr>
+        </thead>
+        <tbody>
+          <?php
+          $servername = "localhost";
+          $username = "root"; // Default username for XAMPP
+          $password = "";     // Default password for XAMPP
+          $dbname = "RallyResults"; // Your database name
+
+          $conn = new mysqli($servername, $username, $password, $dbname);
+
+          if ($conn->connect_error) {
+              die("Connection failed: " . $conn->connect_error);
+          }
+          
+          $sql = "SELECT rally_year, rally_name, placement FROM RallyData ORDER BY rally_year DESC, placement ASC";
+          $result = $conn->query($sql);
+
+          if ($result = $conn->query($sql)) {
+              echo "Query succeeded with " . $result->num_rows . " rows.";
+          } else {
+              echo "Error in query: " . $conn->error;
+          }
+
+          if ($result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+              echo "<tr>";
+              echo "<td>" . htmlspecialchars($row['rally_year']) . "</td>";
+              echo "<td>" . htmlspecialchars($row['rally_name']) . "</td>";
+              echo "<td>" . htmlspecialchars($row['placement']) . "</td>";
+              echo "</tr>";
+            }
+          } else {
+            echo "<tr><td colspan='3' class='text-center'>No data available</td></tr>";
+          }
+          ?>
+        </tbody>
+    </table>
+</div>
+
+
+  <!-- <div id="accordion" class="container mt-5">
     <h2>World Rally Championship Placements</h2>
     <div class="accordion" id="accordionExample">
       <div class="accordion-item">
@@ -217,7 +266,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </div> -->
 
   <!-- Parallax Section -->
   <div id="parallax" class="parallax" style="background-image: url('Pictures/Parallax.jpg');">

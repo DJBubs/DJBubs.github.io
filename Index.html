@@ -6,11 +6,29 @@
     <title>Ticket Machine</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <script>
+        let currentLanguage = 'en'; // Default language session variable
+
         function updateTime() {
             const now = new Date();
             const dateString = now.toLocaleDateString();
             const timeString = now.toLocaleTimeString();
             document.getElementById('date-time').textContent = `${dateString} ${timeString}`;
+        }
+
+        function openLanguageModal() {
+            document.getElementById('language-modal').style.display = 'flex';
+        }
+
+        function closeLanguageModal() {
+            document.getElementById('language-modal').style.display = 'none';
+        }
+
+        function changeLanguage(lang, flagSrc) {
+            currentLanguage = lang; // Update session variable
+            document.documentElement.lang = lang; // Set the HTML language attribute
+            document.getElementById('current-language-icon').src = flagSrc; // Update the flag icon
+            closeLanguageModal();
+            console.log(`Current language set to: ${currentLanguage}`); // Debug log
         }
 
         setInterval(updateTime, 1000);
@@ -28,14 +46,15 @@
         }
 
         .container {
-            width: 12in;
-            height: 7in;
+            width: 10in;
+            height: 6.633in;
             border: 2px solid #ccc;
             border-radius: 8px;
             overflow: hidden;
             background-color: white;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         .navbar {
@@ -44,7 +63,7 @@
             justify-content: space-between;
             padding: 10px;
             background-color: #f0f0f0;
-            height: 66px; /* 1.1 times original height */
+            height: 66px;
         }
 
         .nav-left, .nav-center, .nav-right {
@@ -53,7 +72,7 @@
         }
 
         .logo {
-            height: 44px; /* Adjusted logo height proportionally */
+            height: 44px;
             width: auto;
             margin-right: 10px;
         }
@@ -65,7 +84,7 @@
 
         .nav-button {
             margin-left: 10px;
-            padding: 10px 15px; /* Reduced button padding */
+            padding: 10px 15px;
             font-size: 30px;
             display: flex;
             justify-content: center;
@@ -73,18 +92,19 @@
         }
 
         .nav-button img {
-            height: 40px; /* Increased image size */
+            height: 40px;
             width: auto;
         }
 
-        #date-time { font-size: 30px; /* Increased font size */
+        #date-time {
+            font-size: 30px;
             font-weight: bold;
         }
 
         .content {
             display: flex;
             justify-content: space-between;
-            align-items: center; /* Center buttons vertically */
+            align-items: center;
             padding: 20px;
             flex-grow: 1;
         }
@@ -96,15 +116,66 @@
 
         .side button {
             display: block;
-            margin: 20px auto; /* Center horizontally */
-            width: 80%; /* Make buttons wider */
-            padding: 30px 0; /* Make buttons 1.5 times taller */
-            font-size: 25px; /* Increased font size */
+            margin: 20px auto;
+            width: 80%;
+            padding: 30px 0;
+            font-size: 25px;
         }
+
         .Main-text {
             font-size: 30px;
         }
 
+        .language-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            cursor: pointer;
+        }
+
+        .language-buttons img {
+            height: 100px;
+            width: auto;
+        }
+
+        #language-modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 85%;
+            max-width: 800px;
+        }
+
+        .modal-content img {
+            margin: 20px;
+            cursor: pointer;
+        }
+
+        .close-modal {
+            background-color: red;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -121,7 +192,9 @@
                 <button class="nav-button" style="height: 66px; width: 120px;">Help</button>
                 <button class="nav-button"><img src="volume-up.png" alt="Text-to-Speech"></button>
                 <button class="nav-button"><img src="contrast.png" alt="Contrast"></button>
-                <button class="nav-button"><img src="united-kingdom.png" alt="Language"></button>
+                <button class="nav-button" onclick="openLanguageModal()">
+                    <img id="current-language-icon" src="united-kingdom.png" alt="Current Language">
+                </button>
             </div>
         </nav>
 
@@ -129,18 +202,31 @@
             <div class="side">
                 <img src="logo-zkm.svg" alt="ZKM Logo" style="width: 150px;">
                 <p class="Main-text">ZKM Gdynia Tickets</p>
-                
+
                 <button>Printed Tickets</button>
                 <button>Top-up City Card</button>
             </div>
             <div class="side">
                 <img src="mzkzg.png" alt="MZKZG Logo" style="width: 150px;">
                 <p class="Main-text">Metropolitan Area Tickets</p>
-                
+
                 <button>Printed Tickets</button>
                 <button>Top-up City Card</button>
             </div>
         </main>
+
+        <div id="language-modal" class="language-modal">
+            <div class="modal-content">
+                <h2>Select a Language</h2>
+                <div class="language-buttons">
+                    <img src="german-flag.png" alt="German" onclick="changeLanguage('de', 'german-flag.png')">
+                    <img src="poland.png" alt="Polish" onclick="changeLanguage('pl', 'poland.png')">
+                    <img src="ukraine.png" alt="Ukrainian" onclick="changeLanguage('uk', 'ukraine.png')">
+                    <img src="united-kingdom.png" alt="English" onclick="changeLanguage('en', 'united-kingdom.png')">
+                </div>
+                <button class="close-modal" onclick="closeLanguageModal()">Close</button>
+            </div>
+        </div>
     </div>
 </body>
 </html>

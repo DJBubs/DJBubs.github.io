@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Machine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const dateString = now.toLocaleDateString();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('date-time').textContent = `${dateString} ${timeString}`;
+        }
+
+        setInterval(updateTime, 1000);
+        document.addEventListener("DOMContentLoaded", updateTime);
+    </script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f8f9fa;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .container {
+            width: 12in;
+            height: 7in;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #f0f0f0;
+            height: 66px; /* 1.1 times original height */
+        }
+
+        .nav-left, .nav-center, .nav-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            height: 44px; /* Adjusted logo height proportionally */
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .nav-center {
+            flex-grow: 1;
+            justify-content: center;
+        }
+
+        .nav-button {
+            margin-left: 10px;
+            padding: 10px 15px; /* Reduced button padding */
+            font-size: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .nav-button img {
+            height: 40px; /* Increased image size */
+            width: auto;
+        }
+
+        #date-time { font-size: 30px; /* Increased font size */
+            font-weight: bold;
+        }
+
+        .content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* Center buttons vertically */
+            padding: 20px;
+            flex-grow: 1;
+        }
+
+        .side {
+            flex: 1;
+            text-align: center;
+        }
+
+        .side button {
+            display: block;
+            margin: 20px auto; /* Center horizontally */
+            width: 80%; /* Make buttons wider */
+            padding: 30px 0; /* Make buttons 1.5 times taller */
+            font-size: 25px; /* Increased font size */
+        }
+        .Main-text {
+            font-size: 30px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-left">
+                <img src="logo-zkm.svg" alt="ZKM Logo" class="logo">
+                <img src="logo-gdynia.svg" alt="Gdynia Logo" class="logo">
+            </div>
+            <div class="nav-center">
+                <span id="date-time"></span>
+            </div>
+            <div class="nav-right">
+                <button class="nav-button" style="height: 66px; width: 120px;">Help</button>
+                <button class="nav-button"><img src="volume-up.png" alt="Text-to-Speech"></button>
+                <button class="nav-button"><img src="contrast.png" alt="Contrast"></button>
+                <button class="nav-button"><img src="united-kingdom.png" alt="Language"></button>
+            </div>
+        </nav>
+
+        <main class="content">
+            <div class="side">
+                <img src="logo-zkm.svg" alt="ZKM Logo" style="width: 150px;">
+                <p class="Main-text">ZKM Gdynia Tickets</p>
+                
+                <button>Printed Tickets</button>
+                <button>Top-up City Card</button>
+            </div>
+            <div class="side">
+                <img src="mzkzg.png" alt="MZKZG Logo" style="width: 150px;">
+                <p class="Main-text">Metropolitan Area Tickets</p>
+                
+                <button>Printed Tickets</button>
+                <button>Top-up City Card</button>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

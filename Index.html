@@ -6,7 +6,17 @@
     <title>Ticket Machine</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <script>
-        let currentLanguage = 'en'; // Default language session variable
+        let currentLanguage = localStorage.getItem('currentLanguage') || 'en';
+
+        function setGlobalLanguage(lang) {
+            localStorage.setItem('currentLanguage', lang); // Save globally
+            currentLanguage = lang; // Update the variable
+            alert(`Language set to: ${currentLanguage}`);
+        }
+
+        function getGlobalLanguage() {
+            return localStorage.getItem('currentLanguage') || 'en';
+        }
 
         function updateTime() {
             const now = new Date();
@@ -21,6 +31,14 @@
 
         function closeLanguageModal() {
             document.getElementById('language-modal').style.display = 'none';
+        }
+
+        function openHelpModal() {
+            document.getElementById('help-modal').style.display = 'flex';
+        }
+
+        function closeHelpModal() {
+            document.getElementById('help-modal').style.display = 'none';
         }
 
         function changeLanguage(lang, flagSrc) {
@@ -138,7 +156,7 @@
             width: auto;
         }
 
-        #language-modal {
+        #language-modal, #help-modal {
             display: none;
             position: absolute;
             top: 0;
@@ -189,7 +207,7 @@
                 <span id="date-time"></span>
             </div>
             <div class="nav-right">
-                <button class="nav-button" style="height: 66px; width: 120px;">Help</button>
+                <button class="nav-button" style="height: 66px; width: 120px;" onclick="openHelpModal()">Help</button>
                 <button class="nav-button"><img src="volume-up.png" alt="Text-to-Speech"></button>
                 <button class="nav-button"><img src="contrast.png" alt="Contrast"></button>
                 <button class="nav-button" onclick="openLanguageModal()">
@@ -203,7 +221,7 @@
                 <img src="logo-zkm.svg" alt="ZKM Logo" style="width: 150px;">
                 <p class="Main-text">ZKM Gdynia Tickets</p>
 
-                <button>Printed Tickets</button>
+                <button onclick="window.location.href='ZKM-drukowane.html'">Printed Tickets</button>
                 <button>Top-up City Card</button>
             </div>
             <div class="side">
@@ -225,6 +243,14 @@
                     <img src="united-kingdom.png" alt="English" onclick="changeLanguage('en', 'united-kingdom.png')">
                 </div>
                 <button class="close-modal" onclick="closeLanguageModal()">Close</button>
+            </div>
+        </div>
+
+        <div id="help-modal" class="help-modal">
+            <div class="modal-content">
+                <h2>Help</h2>
+                <p>If you need assistance, please contact support or refer to the instructions provided on the screen.</p>
+                <button class="close-modal" onclick="closeHelpModal()">Close</button>
             </div>
         </div>
     </div>

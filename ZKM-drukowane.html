@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Machine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        let currentLanguage = 'en'; // Default language session variable
+
+        function updateTime() {
+            const now = new Date();
+            const dateString = now.toLocaleDateString();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('date-time').textContent = `${dateString} ${timeString}`;
+        }
+
+        setInterval(updateTime, 1000);
+        document.addEventListener("DOMContentLoaded", updateTime);
+
+        function openHelpModal() {
+            document.getElementById('help-modal').style.display = 'flex';
+        }
+
+        function closeHelpModal() {
+            document.getElementById('help-modal').style.display = 'none';
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const summary = document.querySelector(".summary");
+            const rows = document.querySelectorAll(".column");
+            let ticketCounts = JSON.parse(localStorage.getItem('ticketCounts')) || {};
+            const ticketPrices = JSON.parse(localStorage.getItem('ticketPrices')) || {};
+
+            rows.forEach(column => {
+                const title = column.querySelector(".row.title").textContent;
+                const types = column.querySelectorAll(".row.type");
+                const buttons = column.querySelectorAll(".button");
+
+                types.forEach((type, index) => {
+                    const typeName = type.textContent;
+                    const key = `${title} - ${typeName}`;
+                    const price = parseFloat(typeName.match(/\d+,?\d*/)[0].replace(",", "."));
+                    if (!(key in ticketCounts)) {
+                        ticketCounts[key] = 0;
+                        ticketPrices[key] = price;
+                    }
+
+                    buttons[index * 2].addEventListener("click", () => {
+                        ticketCounts[key]++;
+                        saveToLocalStorage();
+                        updateSummary();
+                    });
+
+                    buttons[index * 2 + 1].addEventListener("click", () => {
+                        if (ticketCounts[key] > 0) {
+                            ticketCounts[key]--;
+                            saveToLocalStorage();
+                            updateSummary();
+                        }
+                    });
+                });
+            });
+
+            function saveToLocalStorage() {
+                localStorage.setItem('ticketCounts', JSON.stringify(ticketCounts));
+                localStorage.setItem('ticketPrices', JSON.stringify(ticketPrices));
+            }
+
+            function resetLocalStorage() {
+                localStorage.removeItem('ticketCounts');
+                localStorage.removeItem('ticketPrices');
+                ticketCounts = {};
+                updateSummary();
+                window.location.href='index.html';
+            }
+
+            function updateSummary() {
+                let totalPrice = 0;
+                const details = Object.entries(ticketCounts)
+                    .filter(([, count]) => count > 0)
+                    .map(([key, count]) => {
+                        totalPrice += ticketPrices[key] * count;
+                        return `${key}: ${count}`;
+                    })
+                    .join("\n");
+
+                summary.textContent = totalPrice > 0
+                    ? `Tickets:\n${details}\n\nTotal Price: ${totalPrice.toFixed(2)} PLN`
+                    : "Summary: Please select an option above.";
+            }
+
+            // Initialize summary on page load
+            updateSummary();
+
+            // Add event listener for the Cancel button
+            document.querySelector(".nav-right .nav-button:last-child").addEventListener("click", resetLocalStorage);
+        });
+    </script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f8f9fa;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .container {
+            width: 10in;
+            height: 6.633in;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #f0f0f0;
+            height: 66px;
+        }
+
+        .nav-left, .nav-center, .nav-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            height: 44px;
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .nav-center {
+            flex-grow: 1;
+            justify-content: center;
+        }
+
+        .nav-button {
+            margin-left: 10px;
+            padding: 10px 15px;
+            font-size: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .nav-button img {
+            height: 40px;
+            width: auto;
+        }
+
+        #date-time {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .content {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding: 20px;
+            gap: 10px;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .row.title {
+            font-weight: bold;
+            font-size: 20px;
+            text-align: center;
+        }
+
+        .row.description {
+            font-size: 16px;
+            text-align: center;
+            color: #555;
+        }
+
+        .row.type {
+            font-size: 14px;
+            text-align: center;
+            color: #777;
+        }
+
+        .button {
+            display: inline-block;
+            width: 80px; /* Reduced size */
+            height: 80px; /* Reduced size */
+            font-size: 16px; /* Adjusted font size */
+            text-align: center;
+            line-height: 80px; /* Adjusted line height */
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #e0e0e0;
+            cursor: pointer;
+        }
+
+        .summary {
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            background-color: #f8f9fa;
+            border-top: 2px solid #ccc;
+            position: relative;
+            white-space: pre-wrap; /* Preserve line breaks */
+        }
+
+        .summary-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: absolute;
+            right: 20px; /* Adjust for desired alignment */
+            top: 50px; /* Updated to fixed value */
+        }
+
+        .summary-button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .summary-button:hover {
+            background-color: #0056b3;
+        }
+
+        #language-modal, #help-modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 85%;
+            max-width: 800px;
+        }
+
+        .modal-content img {
+            margin: 20px;
+            cursor: pointer;
+        }
+
+        .close-modal {
+            background-color: red;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-left">
+                <img src="logo-zkm.svg" alt="ZKM Logo" class="logo">
+                <img src="logo-gdynia.svg" alt="Gdynia Logo" class="logo">
+            </div>
+            <div class="nav-center">
+                <span id="date-time"></span>
+            </div>
+            <div class="nav-right">
+                <button class="nav-button" style="height: 66px; width: 120px;" onclick="openHelpModal()">Help</button>
+                <button class="nav-button" style="height: 66px; width: 120px;" onclick="window.location.href='index.html'">Return</button>
+                <button class="nav-button" style="height: 66px; width: 120px;" onclick="resetLocalStorage(); window.location.href='index.html'">Cancel</button>
+            </div>
+        </nav>
+
+        <main class="content">
+            <div class="column">
+                <div class="row title">One-way ticket</div>
+                <div class="row type">Normal 4,80 PLN</div>
+                <div class="row">
+                    <div class="button">+</div>
+                    <div class="button">-</div>
+                </div>
+                <div class="row type">Reduced 2,40 PLN</div>
+                <div class="row">
+                    <div class="button">+</div>
+                    <div class="button">-</div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="row title">75 minute ticket</div>
+                <div class="row type">Normal 6,00 PLN</div>
+                <div class="row">
+                    <div class="button">+</div>
+                    <div class="button">-</div>
+                </div>
+                <div class="row type">Reduced 3,00 PLN</div>
+                <div class="row">
+                    <div class="button">+</div>
+                    <div class="button">-</div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="row title">24 hour ticket</div>
+                <div class="row type">Normal 22,00 PLN</div>
+                <div class="row">
+                    <div class="button">+</div>
+                    <div class="button">-</div>
+                </div>
+                <div class="row type">Reduced 11,00 PLN</div>
+                <div class="row">
+                    <div class="button">+</div>
+                    <div class="button">-</div>
+                </div>
+            </div>
+        </main>
+
+        <div class="summary">
+            Summary: Please select an option above.
+            <div class="summary-buttons">
+                <button class="summary-button">Button 1</button>
+                <button class="summary-button">Button 2</button>
+            </div>
+        </div>
+
+        <div id="help-modal" class="help-modal">
+            <div class="modal-content">
+                <h2>Help</h2>
+                <p>If you need assistance, please contact support or refer to the instructions provided on the screen.</p>
+                <button class="close-modal" onclick="closeHelpModal()">Close</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

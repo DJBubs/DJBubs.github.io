@@ -25,32 +25,38 @@
             document.getElementById('date-time').textContent = `${dateString} ${timeString}`;
         }
 
-        function openLanguageModal() {
-            document.getElementById('language-modal').style.display = 'flex';
-        }
-
-        function closeLanguageModal() {
-            document.getElementById('language-modal').style.display = 'none';
-        }
-
-        function openHelpModal() {
-            document.getElementById('help-modal').style.display = 'flex';
-        }
-
-        function closeHelpModal() {
-            document.getElementById('help-modal').style.display = 'none';
-        }
-
-        function changeLanguage(lang, flagSrc) {
-            currentLanguage = lang; // Update session variable
-            document.documentElement.lang = lang; // Set the HTML language attribute
-            document.getElementById('current-language-icon').src = flagSrc; // Update the flag icon
-            closeLanguageModal();
-            console.log(`Current language set to: ${currentLanguage}`); // Debug log
-        }
-
         setInterval(updateTime, 1000);
         document.addEventListener("DOMContentLoaded", updateTime);
+
+        // Timer with progress bar on top of button
+        document.addEventListener("DOMContentLoaded", () => {
+            const closeButton = document.querySelector(".nav-button");
+
+            // Add progress bar container over the button
+            const progressBar = document.createElement("div");
+            progressBar.style.position = "absolute";
+            progressBar.style.bottom = "0";
+            progressBar.style.left = "0";
+            progressBar.style.height = "10%";
+            progressBar.style.width = "0%";
+            progressBar.style.backgroundColor = "#363636";
+            progressBar.style.borderRadius = "5px";
+            progressBar.style.zIndex = "1";
+            progressBar.style.pointerEvents = "none"; // Ensures clicks go through to the button
+            closeButton.appendChild(progressBar);
+
+            let countdown = 10; // 5 seconds countdown
+            let elapsed = 0;
+
+            const timerInterval = setInterval(() => {
+                elapsed++;
+                progressBar.style.width = `${(elapsed / countdown) * 100}%`;
+                if (elapsed >= countdown) {
+                    clearInterval(timerInterval);
+                    window.location.href = "index.html";
+                }
+            }, 1000);
+        });
     </script>
     <style>
         body {
@@ -78,15 +84,21 @@
         .navbar {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: left;
             padding: 10px;
             background-color: #f0f0f0;
             height: 66px;
         }
 
-        .nav-left, .nav-center, .nav-right {
+        /* .nav-left, .nav-right {
             display: flex;
             align-items: center;
+        } */
+
+        .nav-center {
+            display: block;
+            justify-content: left;
+            margin-left: 50px;
         }
 
         .logo {
@@ -107,11 +119,13 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            position: relative;
         }
 
         .nav-button img {
             height: 40px;
             width: auto;
+            z-index: 4; /* Ensures the image stays above the progress bar */
         }
 
         #date-time {
@@ -121,7 +135,7 @@
 
         .content {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             padding: 20px;
             flex-grow: 1;
@@ -195,6 +209,18 @@
             margin-top: 20px;
             font-size: 24px;
         }
+
+        .message {
+            justify-content: center;
+            font-weight: bold;
+            text-align: center;
+            font-size: 24px;
+        }
+        .message-img {
+            width: 200px;
+            margin-right: 20px;
+            height: auto;
+        }
     </style>
 </head>
 <body>
@@ -203,57 +229,27 @@
             <div class="nav-left">
                 <img src="logo-zkm.svg" alt="ZKM Logo" class="logo">
                 <img src="logo-gdynia.svg" alt="Gdynia Logo" class="logo">
+                
             </div>
             <div class="nav-center">
                 <span id="date-time"></span>
             </div>
             <div class="nav-right">
-                <button class="nav-button" style="height: 66px; width: 120px;" onclick="openHelpModal()">Help</button>
-                <button class="nav-button"><img src="volume-up.png" alt="Text-to-Speech"></button>
-                <button class="nav-button"><img src="contrast.png" alt="Contrast"></button>
-                <button class="nav-button" onclick="openLanguageModal()">
-                    <img id="current-language-icon" src="united-kingdom.png" alt="Current Language">
+                <button class="nav-button" onclick="window.location.href='index.html'">
+                    <img src="close.png" alt="Close">
                 </button>
             </div>
         </nav>
 
         <main class="content">
-            <div class="side">
-                <img src="logo-zkm.svg" alt="ZKM Logo" style="width: 150px;">
-                <p class="Main-text">ZKM Gdynia Tickets</p>
-
-                <button onclick="window.location.href='ZKM-drukowane.html'">Printed Tickets</button>
-                <button>Top-up City Card</button>
-            </div>
-            <div class="side">
-                <img src="mzkzg.png" alt="MZKZG Logo" style="width: 150px;">
-                <p class="Main-text">Metropolitan Area Tickets</p>
-
-                <button onclick="window.location.href='Metropolitan-drukowane.html'">Printed Tickets</button>
-                <button>Top-up City Card</button>
+            <div class="message">
+                <img src="logo-zkm.svg" alt="logo" class="message-img">
+                <img src="mzkzg.png" alt="logo" class="message-img">
+                <p>Please collect your ticket and change</p>
+                <p>Thank you for your purchase</p>
             </div>
         </main>
 
-        <div id="language-modal" class="language-modal">
-            <div class="modal-content">
-                <h2>Select a Language</h2>
-                <div class="language-buttons">
-                    <img src="german-flag.png" alt="German" onclick="changeLanguage('de', 'german-flag.png')">
-                    <img src="poland.png" alt="Polish" onclick="changeLanguage('pl', 'poland.png')">
-                    <img src="ukraine.png" alt="Ukrainian" onclick="changeLanguage('uk', 'ukraine.png')">
-                    <img src="united-kingdom.png" alt="English" onclick="changeLanguage('en', 'united-kingdom.png')">
-                </div>
-                <button class="close-modal" onclick="closeLanguageModal()">Close</button>
-            </div>
-        </div>
-
-        <div id="help-modal" class="help-modal">
-            <div class="modal-content">
-                <h2>Help</h2>
-                <p>If you need assistance, please contact support or refer to the instructions provided on the screen.</p>
-                <button class="close-modal" onclick="closeHelpModal()">Close</button>
-            </div>
-        </div>
     </div>
 </body>
 </html>

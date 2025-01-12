@@ -29,9 +29,9 @@
         document.addEventListener("DOMContentLoaded", () => {
             const summary = document.querySelector(".summary");
             const rows = document.querySelectorAll(".column");
-            let ticketCounts = JSON.parse(localStorage.getItem('ticketCounts')) || {};
-            const ticketPrices = JSON.parse(localStorage.getItem('ticketPrices')) || {};
-            let ticketOrder = JSON.parse(localStorage.getItem('ticketOrder')) || [];
+            let metro_ticketCounts = JSON.parse(localStorage.getItem('metro_ticketCounts')) || {};
+            const metro_ticketPrices = JSON.parse(localStorage.getItem('metro_ticketPrices')) || {};
+            let metro_ticketOrder = JSON.parse(localStorage.getItem('metro_ticketOrder')) || [];
 
             rows.forEach(column => {
                 const title = column.querySelector(".row.title").textContent;
@@ -42,25 +42,25 @@
                     const typeName = type.textContent;
                     const key = `${title} - ${typeName}`;
                     const price = parseFloat(typeName.match(/\d+,?\d*/)[0].replace(",", "."));
-                    if (!(key in ticketCounts)) {
-                        ticketCounts[key] = 0;
-                        ticketPrices[key] = price;
+                    if (!(key in metro_ticketCounts)) {
+                        metro_ticketCounts[key] = 0;
+                        metro_ticketPrices[key] = price;
                     }
 
                     buttons[index * 2].addEventListener("click", () => {
-                        if (!ticketOrder.includes(key)) {
-                            ticketOrder.push(key); // Add to the end of the list
+                        if (!metro_ticketOrder.includes(key)) {
+                            metro_ticketOrder.push(key); // Add to the end of the list
                         }
-                        ticketCounts[key]++;
+                        metro_ticketCounts[key]++;
                         saveToLocalStorage();
                         updateSummary();
                     });
 
                     buttons[index * 2 + 1].addEventListener("click", () => {
-                        if (ticketCounts[key] > 0) {
-                            ticketCounts[key]--;
-                            if (ticketCounts[key] === 0) {
-                                ticketOrder = ticketOrder.filter(item => item !== key);
+                        if (metro_ticketCounts[key] > 0) {
+                            metro_ticketCounts[key]--;
+                            if (metro_ticketCounts[key] === 0) {
+                                metro_ticketOrder = metro_ticketOrder.filter(item => item !== key);
                             }
                             saveToLocalStorage();
                             updateSummary();
@@ -70,17 +70,17 @@
             });
 
             function saveToLocalStorage() {
-                localStorage.setItem('ticketCounts', JSON.stringify(ticketCounts));
-                localStorage.setItem('ticketPrices', JSON.stringify(ticketPrices));
-                localStorage.setItem('ticketOrder', JSON.stringify(ticketOrder));
+                localStorage.setItem('metro_ticketCounts', JSON.stringify(metro_ticketCounts));
+                localStorage.setItem('metro_ticketPrices', JSON.stringify(metro_ticketPrices));
+                localStorage.setItem('metro_ticketOrder', JSON.stringify(metro_ticketOrder));
             }
 
             function resetLocalStorage() {
-                localStorage.removeItem('ticketCounts');
-                localStorage.removeItem('ticketPrices');
-                localStorage.removeItem('ticketOrder');
-                ticketCounts = {};
-                ticketOrder = [];
+                localStorage.removeItem('metro_ticketCounts');
+                localStorage.removeItem('metro_ticketPrices');
+                localStorage.removeItem('metro_ticketOrder');
+                metro_ticketCounts = {};
+                metro_ticketOrder = [];
                 updateSummary();
                 window.location.href='index.html';
             }
@@ -88,12 +88,12 @@
             function updateSummary() {
                 let totalPrice = 0;
                 let totalTickets = 0;
-                const details = ticketOrder
-                    .filter(key => ticketCounts[key] > 0)
+                const details = metro_ticketOrder
+                    .filter(key => metro_ticketCounts[key] > 0)
                     .map(key => {
-                        totalPrice += ticketPrices[key] * ticketCounts[key];
-                        totalTickets += ticketCounts[key];
-                        return `${key}: ${ticketCounts[key]}`;
+                        totalPrice += metro_ticketPrices[key] * metro_ticketCounts[key];
+                        totalTickets += metro_ticketCounts[key];
+                        return `${key}: ${metro_ticketCounts[key]}`;
                     })
                     .join("\n");
 
@@ -127,11 +127,11 @@
             // Automatically close the modal after 0.5 seconds
             setTimeout(() => {
                 modal.style.display = 'none';
-                localStorage.removeItem('ticketCounts');
-                localStorage.removeItem('ticketPrices');
-                localStorage.removeItem('ticketOrder');
-                ticketCounts = {};
-                ticketOrder = [];
+                localStorage.removeItem('metro_ticketCounts');
+                localStorage.removeItem('metro_ticketPrices');
+                localStorage.removeItem('metro_ticketOrder');
+                metro_ticketCounts = {};
+                metro_ticketOrder = [];
                 window.location.href = 'zaplacone-karta.html';
             }, 3000);
         }
@@ -143,11 +143,11 @@
             // Automatically close the modal after 0.5 seconds
             setTimeout(() => {
                 modal.style.display = 'none';
-                localStorage.removeItem('ticketCounts');
-                localStorage.removeItem('ticketPrices');
-                localStorage.removeItem('ticketOrder');
-                ticketCounts = {};
-                ticketOrder = [];
+                localStorage.removeItem('metro_ticketCounts');
+                localStorage.removeItem('metro_ticketPrices');
+                localStorage.removeItem('metro_ticketOrder');
+                metro_ticketCounts = {};
+                metro_ticketOrder = [];
                 window.location.href = 'zaplacone-gotowka.html';
             }, 3000);
         }
@@ -360,12 +360,12 @@
         <main class="content">
             <div class="column">
                 <div class="row title">One-way ticket</div>
-                <div class="row type">Normal 4,80 PLN</div>
+                <div class="row type">Normal 5,20 PLN</div>
                 <div class="row">
                     <div class="button">+</div>
                     <div class="button">-</div>
                 </div>
-                <div class="row type">Reduced 2,40 PLN</div>
+                <div class="row type">Reduced 2,60 PLN</div>
                 <div class="row">
                     <div class="button">+</div>
                     <div class="button">-</div>
@@ -373,11 +373,11 @@
             </div>
             <div class="column">
                 <div class="row title">24 hour ticket</div>
-                <div class="button">Continue</div>
+                <div class="button" onclick="window.location.href='Metropolitan-drukowane-24h.html'">Continue</div>
             </div>
             <div class="column">
                 <div class="row title">72 hour ticket</div>
-                <div class="button">Continue</div>
+                <div class="button" onclick="window.location.href='Metropolitan-drukowane-72h.html'">Continue</div>
             </div>
         </main>
 

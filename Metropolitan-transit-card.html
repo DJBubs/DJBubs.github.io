@@ -39,14 +39,21 @@
                 const types = column.querySelectorAll(".row.type");
                 const buttons = column.querySelectorAll(".button");
 
-                types.forEach((type, index) => {
-                    const typeName = type.textContent.trim();
+                // Correct subtext mapping logic
+                const subtextMapping = [
+                    "Gdansk+Sopot",
+                    "Sopot+Gdynia",
+                    "One provider network",
+                    "MZKZG area"
+                ];
 
-                    // Determine the associated subtext (e.g., "Railway+Gdansk") based on the type's index
-                    let subtext = '';
-                    if (subtextElements.length > 0 && subtextElements[index]) {
-                        subtext = subtextElements[index].textContent.trim();
-                    }
+                types.forEach((type, typeIndex) => {
+                    const typeName = type.textContent.trim();
+                    const typeId = typeName.includes("Normal") ? "normal" : "reduced";
+
+                    // Map subtext based on button ID pairing (0,4), (1,5), etc.
+                    const subtextIndex = Math.floor(typeIndex % 4); // Cycle through subtextMapping every 4 types
+                    const subtext = subtextMapping[subtextIndex];
 
                     // Generate the ticket key for the summary
                     const key = subtext
@@ -60,8 +67,14 @@
                         metro_transit_ticketPrices[key] = price;
                     }
 
-                    // Attach event listeners to the "+" and "-" buttons for the ticket type
-                    buttons[index * 2].addEventListener("click", () => {
+                    // Attach event listeners to the "Add" and "Remove" buttons using IDs
+                    const addButton = buttons[typeIndex * 2];
+                    const removeButton = buttons[typeIndex * 2 + 1];
+
+                    addButton.id = `${typeId}-add-${typeIndex}`;
+                    removeButton.id = `${typeId}-remove-${typeIndex}`;
+
+                    addButton.addEventListener("click", () => {
                         if (!metro_transit_ticketOrder.includes(key)) {
                             metro_transit_ticketOrder.push(key); // Add to the order
                         }
@@ -70,7 +83,7 @@
                         updateSummary();
                     });
 
-                    buttons[index * 2 + 1].addEventListener("click", () => {
+                    removeButton.addEventListener("click", () => {
                         if (metro_transit_ticketCounts[key] > 0) {
                             metro_transit_ticketCounts[key]--;
                             if (metro_transit_ticketCounts[key] === 0) {
@@ -87,16 +100,6 @@
                 localStorage.setItem('metro_transit_ticketCounts', JSON.stringify(metro_transit_ticketCounts));
                 localStorage.setItem('metro_transit_ticketPrices', JSON.stringify(metro_transit_ticketPrices));
                 localStorage.setItem('metro_transit_ticketOrder', JSON.stringify(metro_transit_ticketOrder));
-            }
-
-            function resetLocalStorage() {
-                localStorage.removeItem('metro_transit_ticketCounts');
-                localStorage.removeItem('metro_transit_ticketPrices');
-                localStorage.removeItem('metro_transit_ticketOrder');
-                metro_transit_ticketCounts = {};
-                metro_transit_ticketOrder = [];
-                updateSummary();
-                window.location.href='index.html';
             }
 
             function updateSummary() {
@@ -127,9 +130,11 @@
             // Initialize summary on page load
             updateSummary();
 
-            // Add event listener for the Cancel button
             document.querySelector(".nav-right .nav-button:last-child").addEventListener("click", resetLocalStorage);
         });
+
+
+        
 
         function openCardPaymentModal() {
             const modal = document.getElementById('card-payment-modal');
@@ -370,7 +375,7 @@
             </div>
             <div class="nav-right">
                 <button class="nav-button" style="height: 66px; width: 120px;" onclick="openHelpModal()">Help</button>
-                <button class="nav-button" style="height: 66px; width: 120px;" onclick="window.location.href='Metropolitan-drukowane.html'">Return</button>
+                <button class="nav-button" style="height: 66px; width: 120px;" onclick="window.location.href='index.html'">Return</button>
                 <button class="nav-button" style="height: 66px; width: 120px;" onclick="resetLocalStorage(); window.location.href='index.html'">Cancel</button>
             </div>
         </nav>
@@ -378,7 +383,7 @@
         <main class="content">
             <div class="column" style="width: 176px">
                 <div class="row title">Municipal ticket</div>
-                <div class="row title">(1 Month)</div>
+                <div class="row subtext">1 Month</div>
                 <div class="row type">Normal 156,00 PLN</div>
                 <div class="row">
                     <div class="button">+</div>
@@ -402,46 +407,46 @@
                     <tr>
                         <td><div class="row type">Normal 80,00 PLN</div>
                             <div class="row">
-                                <div class="button">+</div>
+                                <div class="button" id="Gdansk+Sopot">+</div>
                                 <div class="button">-</div>
                             </div>
                             </td>
                         <td><div class="row type">Normal 80,00 PLN</div>
                             <div class="row">
-                                <div class="button">+</div>
+                                <div class="button" id="Sopot+Gdynia">+</div>
                                 <div class="button">-</div>
                             </div></td>
                         <td><div class="row type">Normal 86,00 PLN</div>
                             <div class="row">
-                                <div class="button">+</div>
+                                <div class="button" id="One provider network">+</div>
                                 <div class="button">-</div>
                             </div></td>
                         <td><div class="row type">Normal 106,00 PLN</div>
                             <div class="row">
-                                <div class="button">+</div>
+                                <div class="button" id="MZKZG area">+</div>
                                 <div class="button">-</div>
                             </div></td>
                     </tr>
                     <tr>
                         <td><div class="row type">Reduced 40,00 PLN</div>
                             <div class="row">
-                                <div class="button">+</div>
+                                <div class="button" id="Gdansk+Sopot">+</div>
                                 <div class="button">-</div>
                             </div></td>
                         <td><div class="row type">Reduced 40,00 PLN</div>
                             <div class="row">
-                                <div class="button">+</div>
+                                <div class="button" id="Sopot+Gdynia">+</div>
                                 <div class="button">-</div>
                             </div></td>
                         <td><div class="row type">Reduced 43,00 PLN</div>
                             <div class="row">
-                                <div class="button">+</div>
+                                <div class="button" id="One provider network">+</div>
                                 <div class="button">-</div>
                             </div></td>
                             <td>
                                 <div class="row type">Reduced 53,00 PLN</div>
                             <div class="row">
-                                <div class="button">+</div>
+                                <div class="button" id="MZKZG area">+</div>
                                 <div class="button">-</div>
                             </div>
                             </td>

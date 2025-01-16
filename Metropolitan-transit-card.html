@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <script>
         let currentLanguage = 'en'; // Default language session variable
+        let isSelectionModalOpen = false; // Flag to track modal state
 
         function updateTime() {
             const now = new Date();
@@ -75,19 +76,37 @@
                     removeButton.id = `${typeId}-remove-${typeIndex}`;
 
                     addButton.addEventListener("click", () => {
+                        if (addButton.disabled) {
+                            return; // Do nothing if the button is disabled
+                        }
                         if (!metro_transit_ticketOrder.includes(key)) {
                             metro_transit_ticketOrder.push(key); // Add to the order
                         }
                         metro_transit_ticketCounts[key]++;
+                        document.querySelectorAll(".button").forEach(button => {
+                            button.disabled = true; // Disable all buttons
+                            button.classList.add("disabled-button"); // Add opacity effect
+                        });
+                        removeButton.disabled = false; // Keep remove button for this ticket enabled
+                        removeButton.classList.remove("disabled-button");
                         saveToLocalStorage();
                         updateSummary();
                     });
 
                     removeButton.addEventListener("click", () => {
+                        if (removeButton.disabled) {
+                            return; // Do nothing if the button is disabled
+                        }
                         if (metro_transit_ticketCounts[key] > 0) {
                             metro_transit_ticketCounts[key]--;
                             if (metro_transit_ticketCounts[key] === 0) {
                                 metro_transit_ticketOrder = metro_transit_ticketOrder.filter(item => item !== key);
+                                    document.querySelectorAll(".button").forEach(button => {
+                                    button.disabled = false; // Enable all buttons
+                                    button.classList.remove("disabled-button"); // Remove opacity effect
+                                    
+                                });
+                                
                             }
                             saveToLocalStorage();
                             updateSummary();
@@ -143,6 +162,32 @@
             document.querySelector(".nav-right .nav-button:last-child").addEventListener("click", resetLocalStorage);
         });
 
+        document.addEventListener("DOMContentLoaded", () => {
+            const addButtons = document.querySelectorAll(".add-button-id");
+
+            // Function to check the state of add buttons
+            function checkAddButtonsState() {
+                addButtons.forEach(button => {
+                    if (!button.disabled) {
+                        isSelectionModalOpen = false
+                        // You can perform additional actions here
+                    } else {
+                        console.log(`Button with ID ${button.id} is disabled.`);
+                    }
+                });
+            }
+
+            // Periodically check the state of add buttons
+            setInterval(checkAddButtonsState, 1000);
+
+            // Example of adding an observer when button state changes
+            addButtons.forEach(button => {
+                button.addEventListener("click", () => {
+                    console.log(`Button ${button.id} clicked. Current state: ${!button.disabled ? "enabled" : "disabled"}`);
+                });
+            });
+        });
+
 
         
 
@@ -179,68 +224,122 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-    const daySelect = document.getElementById('day');
-    const monthSelect = document.getElementById('month');
-    const yearSelect = document.getElementById('year');
-    const currentYear = new Date().getFullYear();
+            const daySelect = document.getElementById('day');
+            const monthSelect = document.getElementById('month');
+            const yearSelect = document.getElementById('year');
+            const currentDate = new Date();
 
-    // Populate month and year dropdowns
-    for (let i = 1; i <= 12; i++) {
-        monthSelect.add(new Option(i, i));
-    }
-    for (let i = currentYear; i <= currentYear + 5; i++) {
-        yearSelect.add(new Option(i, i));
-    }
+            // Populate the dropdowns
+            populateDropdowns();
 
-    // Update days based on the selected month and year
-    function updateDays() {
-        const month = parseInt(monthSelect.value, 10);
-        const year = parseInt(yearSelect.value, 10);
+            function populateDropdowns() {
+                for (let i = 1; i <= 31; i++) {
+                    daySelect.add(new Option(i, i));
+                }
+                for (let i = 1; i <= 12; i++) {
+                    monthSelect.add(new Option(i, i));
+                }
+                const currentYear = currentDate.getFullYear();
+                for (let i = currentYear; i <= currentYear + 5; i++) {
+                    yearSelect.add(new Option(i, i));
+                }
 
-        // Get the number of days in the selected month
-        const daysInMonth = new Date(year, month, 0).getDate();
+                // Set defaults to the current date
+                daySelect.value = currentDate.getDate();
+                monthSelect.value = currentDate.getMonth() + 1; // Months are 0-indexed
+                yearSelect.value = currentYear;
+            }
 
-        // Adjust the day dropdown
-        daySelect.innerHTML = ''; // Clear existing options
-        for (let i = 1; i <= daysInMonth; i++) {
-            daySelect.add(new Option(i, i));
+            function updateDays() {
+                const selectedYear = parseInt(yearSelect.value, 10);
+                const selectedMonth = parseInt(monthSelect.value, 10);
+
+                // Determine the number of days in the selected month/year
+                const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+
+                // Adjust day dropdown
+                const currentDay = parseInt(daySelect.value, 10);
+                daySelect.innerHTML = ''; // Clear existing options
+                for (let i = 1; i <= daysInMonth; i++) {
+                    daySelect.add(new Option(i, i));
+                }
+
+                // Retain the previously selected day if valid, otherwise set to the last day of the month
+                if (currentDay <= daysInMonth) {
+                    daySelect.value = currentDay;
+                } else {
+                    daySelect.value = daysInMonth;
+                }
+            }
+
+            // Update days when month or year changes
+            monthSelect.addEventListener('change', updateDays);
+            yearSelect.addEventListener('change', updateDays);
+
+            // document.querySelectorAll(".button").forEach(button => {
+            //     button.addEventListener("click", openDateSelectionModal);
+            // });
+
+            document.querySelectorAll(".add-button-id").forEach(button => {
+                button.addEventListener("click", openDateSelectionModal);
+            });
+            
+
+            function openDateSelectionModal() {
+            // Calculate the total number of tickets in the summary
+            if (isSelectionModalOpen) {
+                openInfoModal();
+                return; // Prevent multiple openings
+            }
+            isSelectionModalOpen = true; // Set flag to true
+
+
+            // Proceed to open the modal
+            daySelect.value = currentDate.getDate();
+            monthSelect.value = currentDate.getMonth() + 1;
+            yearSelect.value = currentDate.getFullYear();
+            updateDays(); // Ensure days are valid for the current month/year
+            document.getElementById('date-selection-modal').style.display = 'flex';
         }
-    }
+            function resetModalFlagAndReturn() {
+                isSelectionModalOpen = false; // Reset the flag
+                //window.location.href = 'index.html'; // Redirect to return
+            }
 
-    // Add event listeners to update days when month or year changes
-    monthSelect.addEventListener('change', updateDays);
-    yearSelect.addEventListener('change', updateDays);
 
-    // Initialize days based on default month and year
-    updateDays();
+            function closeDateSelectionModal() {
+                document.getElementById('date-selection-modal').style.display = 'none';
+            }
 
-    // Open the date selection modal
-    document.querySelectorAll(".button").forEach(button => {
-        button.addEventListener("click", openDateSelectionModal);
-    });
-});
+            function confirmDateSelection() {
+                const day = daySelect.value;
+                const month = monthSelect.value;
+                const year = yearSelect.value;
+                const selectedDate = `${day}/${month}/${year}`;
+                
+                // Update summary text
+                const summary = document.querySelector(".summary");
+                const newSummaryDetail = `Validity Start Date: ${selectedDate}`;
+                summary.innerHTML += newSummaryDetail;
 
-function openDateSelectionModal() {
-    document.getElementById('date-selection-modal').style.display = 'flex';
-}
+                closeDateSelectionModal();
+            }
 
-function closeDateSelectionModal() {
-    document.getElementById('date-selection-modal').style.display = 'none';
-}
+            window.closeDateSelectionModal = closeDateSelectionModal;
+            window.confirmDateSelection = confirmDateSelection;
+        });
 
-function confirmDateSelection() {
-    const day = document.getElementById('day').value;
-    const month = document.getElementById('month').value;
-    const year = document.getElementById('year').value;
-    const selectedDate = `${day}/${month}/${year}`;
+        function openInfoModal() {
+            const infoModal = document.getElementById('info-modal');
+            infoModal.style.display = 'flex';
+        }
 
-    // Update summary text
-    const summary = document.querySelector(".summary");
-    const newSummaryDetail = `<br>Validity Start Date: ${selectedDate}`;
-    summary.innerHTML += newSummaryDetail;
+        function closeInfoModal() {
+            const infoModal = document.getElementById('info-modal');
+            infoModal.style.display = 'none';
+        }
 
-    closeDateSelectionModal();
-}
+
 
 
 
@@ -358,6 +457,19 @@ function confirmDateSelection() {
             cursor: pointer;
         }
 
+        .add-button-id {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            font-size: 24px;
+            text-align: center;
+            line-height: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #e0e0e0;
+            cursor: pointer;
+        }
+
         .summary-header {
             font-weight: bold;
             font-size: 24px;
@@ -438,28 +550,61 @@ function confirmDateSelection() {
         }
 
         #date-selection-modal {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    justify-content: center;
-    align-items: center;
-    z-index: 10;
-}
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
 
-.modal-content {
-    background-color: white;
-    padding: 40px;
-    border-radius: 12px;
-    text-align: center;
-    font-size: 18px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    width: 85%;
-    max-width: 800px;
-}
+        .modal-content {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 18px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 85%;
+            max-width: 800px;
+        }
+
+        .button:disabled {
+            cursor: not-allowed;
+        }
+
+        .disabled-button {
+            opacity: 0.5; /* Add opaque effect */
+        }
+
+        #info-modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 18px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 85%;
+            max-width: 800px;
+        }
+
 
 
     </style>
@@ -479,20 +624,24 @@ function confirmDateSelection() {
                 <button class="nav-button" style="height: 66px; width: 120px;" onclick="window.location.href='index.html'">Return</button>
                 <button class="nav-button" style="height: 66px; width: 120px;" onclick="resetLocalStorage(); window.location.href='index.html'">Cancel</button>
             </div>
+            
         </nav>
-
+        <div class="site-info" style="text-align: center; font-size: 20px; padding: 10px; font-weight: bold;">
+            Metropolitan Area Tickets: Transit Card
+        </div>
         <main class="content">
+            
             <div class="column" style="width: 176px">
                 <div class="row title">Municipal ticket</div>
                 <div class="row subtext">1 Month</div>
                 <div class="row type">Normal 156,00 PLN</div>
                 <div class="row">
-                    <div class="button">+</div>
+                    <div class="button add-button-id">+</div>
                     <div class="button">-</div>
                 </div>
                 <div class="row type">Reduced 78,00 PLN</div>
                 <div class="row">
-                    <div class="button">+</div>
+                    <div class="button add-button-id">+</div>
                     <div class="button">-</div>
                 </div>
             </div>
@@ -508,46 +657,46 @@ function confirmDateSelection() {
                     <tr>
                         <td><div class="row type">Normal 80,00 PLN</div>
                             <div class="row">
-                                <div class="button" id="Gdansk+Sopot">+</div>
+                                <div class="button add-button-id" id="Gdansk+Sopot">+</div>
                                 <div class="button">-</div>
                             </div>
                             </td>
                         <td><div class="row type">Normal 80,00 PLN</div>
                             <div class="row">
-                                <div class="button" id="Sopot+Gdynia">+</div>
+                                <div class="button add-button-id" id="Sopot+Gdynia">+</div>
                                 <div class="button">-</div>
                             </div></td>
                         <td><div class="row type">Normal 86,00 PLN</div>
                             <div class="row">
-                                <div class="button" id="One provider network">+</div>
+                                <div class="button add-button-id" id="One provider network">+</div>
                                 <div class="button">-</div>
                             </div></td>
                         <td><div class="row type">Normal 106,00 PLN</div>
                             <div class="row">
-                                <div class="button" id="MZKZG area">+</div>
+                                <div class="button add-button-id" id="MZKZG area" >+</div>
                                 <div class="button">-</div>
                             </div></td>
                     </tr>
                     <tr>
                         <td><div class="row type">Reduced 40,00 PLN</div>
                             <div class="row">
-                                <div class="button" id="Gdansk+Sopot">+</div>
+                                <div class="button add-button-id" id="Gdansk+Sopot" >+</div>
                                 <div class="button">-</div>
                             </div></td>
                         <td><div class="row type">Reduced 40,00 PLN</div>
                             <div class="row">
-                                <div class="button" id="Sopot+Gdynia">+</div>
+                                <div class="button add-button-id" id="Sopot+Gdynia" >+</div>
                                 <div class="button">-</div>
                             </div></td>
                         <td><div class="row type">Reduced 43,00 PLN</div>
                             <div class="row">
-                                <div class="button" id="One provider network">+</div>
+                                <div class="button add-button-id" id="One provider network" >+</div>
                                 <div class="button">-</div>
                             </div></td>
                             <td>
                                 <div class="row type">Reduced 53,00 PLN</div>
                             <div class="row">
-                                <div class="button" id="MZKZG area">+</div>
+                                <div class="button add-button-id" id="MZKZG area">+</div>
                                 <div class="button">-</div>
                             </div>
                             </td>
@@ -599,9 +748,20 @@ function confirmDateSelection() {
                 <select id="year"></select>
                 <br><br>
                 <button class="summary-button" onclick="confirmDateSelection()">Confirm</button>
-                <button class="close-modal" onclick="closeDateSelectionModal()">Cancel</button>
+                <!-- <button class="close-modal" onclick="closeDateSelectionModal()">Cancel</button> -->
             </div>
         </div>
+
+        <div id="info-modal" class="help-modal">
+            <div class="modal-content">
+                <h2>Notice</h2>
+                <p>Only one ticket can be purchased at a time. Please complete or cancel your current selection.</p>
+                <button class="close-modal" onclick="closeInfoModal()">Close</button>
+            </div>
+        </div>
+        
+        
+
         
     </div>
 </body>

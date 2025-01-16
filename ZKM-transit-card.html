@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <script>
         let currentLanguage = 'en'; // Default language session variable
+        let isSelectionModalOpen = false; // Flag to track modal state
 
         function updateTime() {
             const now = new Date();
@@ -29,38 +30,83 @@
         document.addEventListener("DOMContentLoaded", () => {
             const summary = document.querySelector(".summary");
             const rows = document.querySelectorAll(".column");
-            let zkm_transit_ticketCounts = JSON.parse(localStorage.getItem('zkm_transit_ticketCounts')) || {};
-            const zkm_transit_ticketPrices = JSON.parse(localStorage.getItem('zkm_transit_ticketPrices')) || {};
-            let zkm_transit_ticketOrder = JSON.parse(localStorage.getItem('zkm_transit_ticketOrder')) || [];
+            let ZKM_transit_ticketCounts = JSON.parse(localStorage.getItem('ZKM_transit_ticketCounts')) || {};
+            const ZKM_transit_ticketPrices = JSON.parse(localStorage.getItem('ZKM_transit_ticketPrices')) || {};
+            let ZKM_transit_ticketOrder = JSON.parse(localStorage.getItem('ZKM_transit_ticketOrder')) || [];
 
             rows.forEach(column => {
-                const title = column.querySelector(".row.title").textContent;
+                const titleElement = column.querySelector(".row.title");
+                const subtextElements = column.querySelectorAll(".row.subtext");
                 const types = column.querySelectorAll(".row.type");
                 const buttons = column.querySelectorAll(".button");
 
-                types.forEach((type, index) => {
-                    const typeName = type.textContent;
-                    const key = `${title} - ${typeName}`;
+                // Correct subtext mapping logic
+                const subtextMapping = [
+                    "Gdansk+Sopot",
+                    "Sopot+Gdynia",
+                    "One provider network",
+                    "MZKZG area"
+                ];
+
+                types.forEach((type, typeIndex) => {
+                    const typeName = type.textContent.trim();
+                    const typeId = typeName.includes("Normal") ? "normal" : "reduced";
+
+                    // Map subtext based on button ID pairing (0,4), (1,5), etc.
+                    const subtextIndex = Math.floor(typeIndex % 4); // Cycle through subtextMapping every 4 types
+                    const subtext = subtextMapping[subtextIndex];
+
+                    // Generate the ticket key for the summary
+                    const key = subtext
+                        ? `${titleElement.textContent} (${subtext}) - ${typeName}`
+                        : `${titleElement.textContent} - ${typeName}`;
+
+                    // Extract the price from the ticket type
                     const price = parseFloat(typeName.match(/\d+,?\d*/)[0].replace(",", "."));
-                    if (!(key in zkm_transit_ticketCounts)) {
-                        zkm_transit_ticketCounts[key] = 0;
-                        zkm_transit_ticketPrices[key] = price;
+                    if (!(key in ZKM_transit_ticketCounts)) {
+                        ZKM_transit_ticketCounts[key] = 0;
+                        ZKM_transit_ticketPrices[key] = price;
                     }
 
-                    buttons[index * 2].addEventListener("click", () => {
-                        if (!zkm_transit_ticketOrder.includes(key)) {
-                            zkm_transit_ticketOrder.push(key); // Add to the end of the list
+                    // Attach event listeners to the "Add" and "Remove" buttons using IDs
+                    const addButton = buttons[typeIndex * 2];
+                    const removeButton = buttons[typeIndex * 2 + 1];
+
+                    addButton.id = `${typeId}-add-${typeIndex}`;
+                    removeButton.id = `${typeId}-remove-${typeIndex}`;
+
+                    addButton.addEventListener("click", () => {
+                        if (addButton.disabled) {
+                            return; // Do nothing if the button is disabled
                         }
-                        zkm_transit_ticketCounts[key]++;
+                        if (!ZKM_transit_ticketOrder.includes(key)) {
+                            ZKM_transit_ticketOrder.push(key); // Add to the order
+                        }
+                        ZKM_transit_ticketCounts[key]++;
+                        document.querySelectorAll(".button").forEach(button => {
+                            button.disabled = true; // Disable all buttons
+                            button.classList.add("disabled-button"); // Add opacity effect
+                        });
+                        removeButton.disabled = false; // Keep remove button for this ticket enabled
+                        removeButton.classList.remove("disabled-button");
                         saveToLocalStorage();
                         updateSummary();
                     });
 
-                    buttons[index * 2 + 1].addEventListener("click", () => {
-                        if (zkm_transit_ticketCounts[key] > 0) {
-                            zkm_transit_ticketCounts[key]--;
-                            if (zkm_transit_ticketCounts[key] === 0) {
-                                zkm_transit_ticketOrder = zkm_transit_ticketOrder.filter(item => item !== key);
+                    removeButton.addEventListener("click", () => {
+                        if (removeButton.disabled) {
+                            return; // Do nothing if the button is disabled
+                        }
+                        if (ZKM_transit_ticketCounts[key] > 0) {
+                            ZKM_transit_ticketCounts[key]--;
+                            if (ZKM_transit_ticketCounts[key] === 0) {
+                                ZKM_transit_ticketOrder = ZKM_transit_ticketOrder.filter(item => item !== key);
+                                    document.querySelectorAll(".button").forEach(button => {
+                                    button.disabled = false; // Enable all buttons
+                                    button.classList.remove("disabled-button"); // Remove opacity effect
+                                    
+                                });
+                                
                             }
                             saveToLocalStorage();
                             updateSummary();
@@ -70,17 +116,17 @@
             });
 
             function saveToLocalStorage() {
-                localStorage.setItem('zkm_transit_ticketCounts', JSON.stringify(zkm_transit_ticketCounts));
-                localStorage.setItem('zkm_transit_ticketPrices', JSON.stringify(zkm_transit_ticketPrices));
-                localStorage.setItem('zkm_transit_ticketOrder', JSON.stringify(zkm_transit_ticketOrder));
+                localStorage.setItem('ZKM_transit_ticketCounts', JSON.stringify(ZKM_transit_ticketCounts));
+                localStorage.setItem('ZKM_transit_ticketPrices', JSON.stringify(ZKM_transit_ticketPrices));
+                localStorage.setItem('ZKM_transit_ticketOrder', JSON.stringify(ZKM_transit_ticketOrder));
             }
 
             function resetLocalStorage() {
-                localStorage.removeItem('zkm_transit_ticketCounts');
-                localStorage.removeItem('zkm_transit_ticketPrices');
-                localStorage.removeItem('zkm_transit_ticketOrder');
-                zkm_transit_ticketCounts = {};
-                zkm_transit_ticketOrder = [];
+                localStorage.removeItem('ZKM_transit_ticketCounts');
+                localStorage.removeItem('ZKM_transit_ticketPrices');
+                localStorage.removeItem('ZKM_transit_ticketOrder');
+                ZKM_transit_ticketCounts = {};
+                ZKM_transit_ticketOrder = [];
                 updateSummary();
                 window.location.href='index.html';
             }
@@ -88,12 +134,12 @@
             function updateSummary() {
                 let totalPrice = 0;
                 let totalTickets = 0;
-                const details = zkm_transit_ticketOrder
-                    .filter(key => zkm_transit_ticketCounts[key] > 0)
+                const details = ZKM_transit_ticketOrder
+                    .filter(key => ZKM_transit_ticketCounts[key] > 0)
                     .map(key => {
-                        totalPrice += zkm_transit_ticketPrices[key] * zkm_transit_ticketCounts[key];
-                        totalTickets += zkm_transit_ticketCounts[key];
-                        return `${key}: ${zkm_transit_ticketCounts[key]}`;
+                        totalPrice += ZKM_transit_ticketPrices[key] * ZKM_transit_ticketCounts[key];
+                        totalTickets += ZKM_transit_ticketCounts[key];
+                        return `${key}: ${ZKM_transit_ticketCounts[key]}`;
                     })
                     .join("\n");
 
@@ -110,15 +156,40 @@
                 summary.innerHTML = `${summaryHeader}<br>${summaryDetails}<br>${summaryButtonsHTML}`;
             }
 
-
-
-
             // Initialize summary on page load
             updateSummary();
 
-            // Add event listener for the Cancel button
             document.querySelector(".nav-right .nav-button:last-child").addEventListener("click", resetLocalStorage);
         });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const addButtons = document.querySelectorAll(".add-button-id");
+
+            // Function to check the state of add buttons
+            function checkAddButtonsState() {
+                addButtons.forEach(button => {
+                    if (!button.disabled) {
+                        isSelectionModalOpen = false
+                        // You can perform additional actions here
+                    } else {
+                        console.log(`Button with ID ${button.id} is disabled.`);
+                    }
+                });
+            }
+
+            // Periodically check the state of add buttons
+            setInterval(checkAddButtonsState, 1000);
+
+            // Example of adding an observer when button state changes
+            addButtons.forEach(button => {
+                button.addEventListener("click", () => {
+                    console.log(`Button ${button.id} clicked. Current state: ${!button.disabled ? "enabled" : "disabled"}`);
+                });
+            });
+        });
+
+
+        
 
         function openCardPaymentModal() {
             const modal = document.getElementById('card-payment-modal');
@@ -127,11 +198,11 @@
             // Automatically close the modal after 0.5 seconds
             setTimeout(() => {
                 modal.style.display = 'none';
-                localStorage.removeItem('zkm_transit_ticketCounts');
-                localStorage.removeItem('zkm_transit_ticketPrices');
-                localStorage.removeItem('zkm_transit_ticketOrder');
-                zkm_transit_ticketCounts = {};
-                zkm_transit_ticketOrder = [];
+                localStorage.removeItem('ZKM_transit_ticketCounts');
+                localStorage.removeItem('ZKM_transit_ticketPrices');
+                localStorage.removeItem('ZKM_transit_ticketOrder');
+                ZKM_transit_ticketCounts = {};
+                ZKM_transit_ticketOrder = [];
                 window.location.href = 'zaplacone-karta.html';
             }, 3000);
         }
@@ -143,14 +214,134 @@
             // Automatically close the modal after 0.5 seconds
             setTimeout(() => {
                 modal.style.display = 'none';
-                localStorage.removeItem('zkm_transit_ticketCounts');
-                localStorage.removeItem('zkm_transit_ticketPrices');
-                localStorage.removeItem('zkm_transit_ticketOrder');
-                zkm_transit_ticketCounts = {};
-                zkm_transit_ticketOrder = [];
+                localStorage.removeItem('ZKM_transit_ticketCounts');
+                localStorage.removeItem('ZKM_transit_ticketPrices');
+                localStorage.removeItem('ZKM_transit_ticketOrder');
+                ZKM_transit_ticketCounts = {};
+                ZKM_transit_ticketOrder = [];
                 window.location.href = 'zaplacone-gotowka.html';
             }, 3000);
         }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const daySelect = document.getElementById('day');
+            const monthSelect = document.getElementById('month');
+            const yearSelect = document.getElementById('year');
+            const currentDate = new Date();
+
+            // Populate the dropdowns
+            populateDropdowns();
+
+            function populateDropdowns() {
+                for (let i = 1; i <= 31; i++) {
+                    daySelect.add(new Option(i, i));
+                }
+                for (let i = 1; i <= 12; i++) {
+                    monthSelect.add(new Option(i, i));
+                }
+                const currentYear = currentDate.getFullYear();
+                for (let i = currentYear; i <= currentYear + 5; i++) {
+                    yearSelect.add(new Option(i, i));
+                }
+
+                // Set defaults to the current date
+                daySelect.value = currentDate.getDate();
+                monthSelect.value = currentDate.getMonth() + 1; // Months are 0-indexed
+                yearSelect.value = currentYear;
+            }
+
+            function updateDays() {
+                const selectedYear = parseInt(yearSelect.value, 10);
+                const selectedMonth = parseInt(monthSelect.value, 10);
+
+                // Determine the number of days in the selected month/year
+                const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+
+                // Adjust day dropdown
+                const currentDay = parseInt(daySelect.value, 10);
+                daySelect.innerHTML = ''; // Clear existing options
+                for (let i = 1; i <= daysInMonth; i++) {
+                    daySelect.add(new Option(i, i));
+                }
+
+                // Retain the previously selected day if valid, otherwise set to the last day of the month
+                if (currentDay <= daysInMonth) {
+                    daySelect.value = currentDay;
+                } else {
+                    daySelect.value = daysInMonth;
+                }
+            }
+
+            // Update days when month or year changes
+            monthSelect.addEventListener('change', updateDays);
+            yearSelect.addEventListener('change', updateDays);
+
+            // document.querySelectorAll(".button").forEach(button => {
+            //     button.addEventListener("click", openDateSelectionModal);
+            // });
+
+            document.querySelectorAll(".add-button-id").forEach(button => {
+                button.addEventListener("click", openDateSelectionModal);
+            });
+            
+
+            function openDateSelectionModal() {
+            // Calculate the total number of tickets in the summary
+            if (isSelectionModalOpen) {
+                openInfoModal();
+                return; // Prevent multiple openings
+            }
+            isSelectionModalOpen = true; // Set flag to true
+
+
+            // Proceed to open the modal
+            daySelect.value = currentDate.getDate();
+            monthSelect.value = currentDate.getMonth() + 1;
+            yearSelect.value = currentDate.getFullYear();
+            updateDays(); // Ensure days are valid for the current month/year
+            document.getElementById('date-selection-modal').style.display = 'flex';
+        }
+            function resetModalFlagAndReturn() {
+                isSelectionModalOpen = false; // Reset the flag
+                //window.location.href = 'index.html'; // Redirect to return
+            }
+
+
+            function closeDateSelectionModal() {
+                document.getElementById('date-selection-modal').style.display = 'none';
+            }
+
+            function confirmDateSelection() {
+                const day = daySelect.value;
+                const month = monthSelect.value;
+                const year = yearSelect.value;
+                const selectedDate = `${day}/${month}/${year}`;
+                
+                // Update summary text
+                const summary = document.querySelector(".summary");
+                const newSummaryDetail = `Validity Start Date: ${selectedDate}`;
+                summary.innerHTML += newSummaryDetail;
+
+                closeDateSelectionModal();
+            }
+
+            window.closeDateSelectionModal = closeDateSelectionModal;
+            window.confirmDateSelection = confirmDateSelection;
+        });
+
+        function openInfoModal() {
+            const infoModal = document.getElementById('info-modal');
+            infoModal.style.display = 'flex';
+        }
+
+        function closeInfoModal() {
+            const infoModal = document.getElementById('info-modal');
+            infoModal.style.display = 'none';
+        }
+
+
+
+
 
     </script>
     <style>
@@ -222,10 +413,13 @@
 
         .content {
             display: flex;
-            justify-content: space-around;
+            justify-content: space-evenly;
             align-items: flex-start;
             padding: 20px;
-            gap: 10px;
+            gap: 20px;
+            flex-wrap: wrap;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .column {
@@ -240,6 +434,10 @@
             text-align: center;
         }
 
+        .row.subtext {
+            text-align: center;
+        }
+
         .row.type {
             font-size: 18px;
             text-align: center;
@@ -248,11 +446,24 @@
 
         .button {
             display: inline-block;
-            width: 150px; /* Reduced size */
-            height: 300px; /* Reduced size */
-            font-size: 24px; /* Adjusted font size */
+            width: 20px;
+            height: 20px;
+            font-size: 24px;
             text-align: center;
-            line-height: 80px; /* Adjusted line height */
+            line-height: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #e0e0e0;
+            cursor: pointer;
+        }
+
+        .add-button-id {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            font-size: 24px;
+            text-align: center;
+            line-height: 20px;
             border: 1px solid #ccc;
             border-radius: 8px;
             background-color: #e0e0e0;
@@ -272,7 +483,7 @@
             background-color: #f8f9fa;
             border-top: 2px solid #ccc;
             position: relative;
-            white-space: pre-wrap; /* Preserve line breaks */
+            white-space: pre-wrap;
         }
 
         .summary-buttons {
@@ -280,8 +491,8 @@
             flex-direction: column;
             gap: 10px;
             position: absolute;
-            right: 20px; /* Adjust for desired alignment */
-            top: 50px; /* Updated to fixed value */
+            right: 20px;
+            top: 50px;
         }
 
         .summary-button {
@@ -338,6 +549,64 @@
             font-size: 24px;
         }
 
+        #date-selection-modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 18px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 85%;
+            max-width: 800px;
+        }
+
+        .button:disabled {
+            cursor: not-allowed;
+        }
+
+        .disabled-button {
+            opacity: 0.5; /* Add opaque effect */
+        }
+
+        #info-modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 18px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 85%;
+            max-width: 800px;
+        }
+
+
+
     </style>
 </head>
 <body>
@@ -355,24 +624,85 @@
                 <button class="nav-button" style="height: 66px; width: 120px;" onclick="window.location.href='index.html'">Return</button>
                 <button class="nav-button" style="height: 66px; width: 120px;" onclick="resetLocalStorage(); window.location.href='index.html'">Cancel</button>
             </div>
+            
         </nav>
-
+        <div class="site-info" style="text-align: center; font-size: 20px; padding: 10px; font-weight: bold;">
+            ZKM Gdynia Tickets: Transit Card
+        </div>
         <main class="content">
-            <div class="column">
-                <div class="row title">1 Month ticket</div>
+            
+            <div class="column" style="width: 176px">
+                <div class="row title">Municipal ticket</div>
+                <div class="row subtext">1 Month</div>
+                <div class="row type">Normal 156,00 PLN</div>
                 <div class="row">
-                    <div class="button">Name normal ticket</div>
-                    <div class="button">Name reduced ticket</div>
-                    <div class="button">Bearer's normal ticket</div>
+                    <div class="button add-button-id">+</div>
+                    <div class="button">-</div>
+                </div>
+                <div class="row type">Reduced 78,00 PLN</div>
+                <div class="row">
+                    <div class="button add-button-id">+</div>
+                    <div class="button">-</div>
                 </div>
             </div>
-            <div class="column">
-                <div class="row title">Semester ticket</div>
-                <div class="row">
-                    <div class="button">4 Month reducted name ticket</div>
-                    <div class="button">5 Month reduced name ticket</div>
-                </div>
-            </div>
+            <div class="column" style="width: 704px">
+                <div class="row title">Municipal ticket combined with other providers (1 Month)</div>
+                <table>
+                    <tr>
+                        <th class="row subtext">Gdansk+Sopot</th>
+                        <th class="row subtext">Sopot+Gdynia</th>
+                        <th class="row subtext">One provider network</th>
+                        <th class="row subtext">MZKZG area</th>
+                    </tr>
+                    <tr>
+                        <td><div class="row type">Normal 80,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Gdansk+Sopot">+</div>
+                                <div class="button">-</div>
+                            </div>
+                            </td>
+                        <td><div class="row type">Normal 80,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Sopot+Gdynia">+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                        <td><div class="row type">Normal 86,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="One provider network">+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                        <td><div class="row type">Normal 106,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="MZKZG area" >+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                    </tr>
+                    <tr>
+                        <td><div class="row type">Reduced 40,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Gdansk+Sopot" >+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                        <td><div class="row type">Reduced 40,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Sopot+Gdynia" >+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                        <td><div class="row type">Reduced 43,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="One provider network" >+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                            <td>
+                                <div class="row type">Reduced 53,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="MZKZG area">+</div>
+                                <div class="button">-</div>
+                            </div>
+                            </td>
+                    </tr>
+                </table>
+            </div>               
         </main>
 
         <div class="summary">
@@ -406,6 +736,33 @@
                 <!-- <button class="close-modal" onclick="closeCardPaymentModal()">Close</button> -->
             </div>
         </div>
+
+        <div id="date-selection-modal" class="help-modal">
+            <div class="modal-content">
+                <h2>Select Validity Start Date</h2>
+                <label for="day">Day:</label>
+                <select id="day"></select>
+                <label for="month">Month:</label>
+                <select id="month"></select>
+                <label for="year">Year:</label>
+                <select id="year"></select>
+                <br><br>
+                <button class="summary-button" onclick="confirmDateSelection()">Confirm</button>
+                <!-- <button class="close-modal" onclick="closeDateSelectionModal()">Cancel</button> -->
+            </div>
+        </div>
+
+        <div id="info-modal" class="help-modal">
+            <div class="modal-content">
+                <h2>Notice</h2>
+                <p>Only one ticket can be purchased at a time. Please complete or cancel your current selection.</p>
+                <button class="close-modal" onclick="closeInfoModal()">Close</button>
+            </div>
+        </div>
+        
+        
+
+        
     </div>
 </body>
 </html>

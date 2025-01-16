@@ -102,6 +102,16 @@
                 localStorage.setItem('metro_transit_ticketOrder', JSON.stringify(metro_transit_ticketOrder));
             }
 
+            function resetLocalStorage() {
+                localStorage.removeItem('metro_transit_ticketCounts');
+                localStorage.removeItem('metro_transit_ticketPrices');
+                localStorage.removeItem('metro_transit_ticketOrder');
+                metro_transit_ticketCounts = {};
+                metro_transit_ticketOrder = [];
+                updateSummary();
+                window.location.href='index.html';
+            }
+
             function updateSummary() {
                 let totalPrice = 0;
                 let totalTickets = 0;
@@ -167,6 +177,72 @@
                 window.location.href = 'zaplacone-gotowka.html';
             }, 3000);
         }
+
+        document.addEventListener("DOMContentLoaded", () => {
+    const daySelect = document.getElementById('day');
+    const monthSelect = document.getElementById('month');
+    const yearSelect = document.getElementById('year');
+    const currentYear = new Date().getFullYear();
+
+    // Populate month and year dropdowns
+    for (let i = 1; i <= 12; i++) {
+        monthSelect.add(new Option(i, i));
+    }
+    for (let i = currentYear; i <= currentYear + 5; i++) {
+        yearSelect.add(new Option(i, i));
+    }
+
+    // Update days based on the selected month and year
+    function updateDays() {
+        const month = parseInt(monthSelect.value, 10);
+        const year = parseInt(yearSelect.value, 10);
+
+        // Get the number of days in the selected month
+        const daysInMonth = new Date(year, month, 0).getDate();
+
+        // Adjust the day dropdown
+        daySelect.innerHTML = ''; // Clear existing options
+        for (let i = 1; i <= daysInMonth; i++) {
+            daySelect.add(new Option(i, i));
+        }
+    }
+
+    // Add event listeners to update days when month or year changes
+    monthSelect.addEventListener('change', updateDays);
+    yearSelect.addEventListener('change', updateDays);
+
+    // Initialize days based on default month and year
+    updateDays();
+
+    // Open the date selection modal
+    document.querySelectorAll(".button").forEach(button => {
+        button.addEventListener("click", openDateSelectionModal);
+    });
+});
+
+function openDateSelectionModal() {
+    document.getElementById('date-selection-modal').style.display = 'flex';
+}
+
+function closeDateSelectionModal() {
+    document.getElementById('date-selection-modal').style.display = 'none';
+}
+
+function confirmDateSelection() {
+    const day = document.getElementById('day').value;
+    const month = document.getElementById('month').value;
+    const year = document.getElementById('year').value;
+    const selectedDate = `${day}/${month}/${year}`;
+
+    // Update summary text
+    const summary = document.querySelector(".summary");
+    const newSummaryDetail = `<br>Validity Start Date: ${selectedDate}`;
+    summary.innerHTML += newSummaryDetail;
+
+    closeDateSelectionModal();
+}
+
+
 
     </script>
     <style>
@@ -361,6 +437,31 @@
             font-size: 24px;
         }
 
+        #date-selection-modal {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 18px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 85%;
+    max-width: 800px;
+}
+
+
     </style>
 </head>
 <body>
@@ -486,6 +587,22 @@
                 <!-- <button class="close-modal" onclick="closeCardPaymentModal()">Close</button> -->
             </div>
         </div>
+
+        <div id="date-selection-modal" class="help-modal">
+            <div class="modal-content">
+                <h2>Select Validity Start Date</h2>
+                <label for="day">Day:</label>
+                <select id="day"></select>
+                <label for="month">Month:</label>
+                <select id="month"></select>
+                <label for="year">Year:</label>
+                <select id="year"></select>
+                <br><br>
+                <button class="summary-button" onclick="confirmDateSelection()">Confirm</button>
+                <button class="close-modal" onclick="closeDateSelectionModal()">Cancel</button>
+            </div>
+        </div>
+        
     </div>
 </body>
 </html>

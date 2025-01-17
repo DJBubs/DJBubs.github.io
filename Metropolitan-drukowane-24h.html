@@ -50,8 +50,8 @@
 
                     // Generate the ticket key for the summary
                     const key = subtext
-                        ? `${titleElement.textContent} (${subtext}) - ${typeName}`
-                        : `${titleElement.textContent} - ${typeName}`;
+                        ? `24 Hour ${titleElement.textContent} (${subtext}) - ${typeName}`
+                        : `24 Hour ${titleElement.textContent} - ${typeName}`;
 
                     // Extract the price from the ticket type
                     const price = parseFloat(typeName.match(/\d+,?\d*/)[0].replace(",", "."));
@@ -141,8 +141,23 @@
                 localStorage.removeItem('metro_ticketCounts');
                 localStorage.removeItem('metro_ticketPrices');
                 localStorage.removeItem('metro_ticketOrder');
+                localStorage.removeItem('zkm_ticketCounts');
+                localStorage.removeItem('zkm_ticketPrices');
+                localStorage.removeItem('zkm_ticketOrder');
+                localStorage.removeItem('ZKM_transit_ticketCounts');
+                localStorage.removeItem('ZKM_transit_ticketPrices');
+                localStorage.removeItem('ZKM_transit_ticketOrder');
+                localStorage.removeItem('metro_transit_ticketCounts');
+                localStorage.removeItem('metro_transit_ticketPrices');
+                localStorage.removeItem('metro_transit_ticketOrder');
                 metro_ticketCounts = {};
                 metro_ticketOrder = [];
+                zkm_ticketCounts = {};
+                zkm_ticketOrder = [];
+                ZKM_transit_ticketCounts = {};
+                ZKM_transit_ticketOrder = [];
+                metro_transit_ticketCounts = {};
+                metro_transit_ticketOrder = [];
                 window.location.href = 'zaplacone-karta.html';
             }, 3000);
         }
@@ -157,8 +172,23 @@
                 localStorage.removeItem('metro_ticketCounts');
                 localStorage.removeItem('metro_ticketPrices');
                 localStorage.removeItem('metro_ticketOrder');
+                localStorage.removeItem('zkm_ticketCounts');
+                localStorage.removeItem('zkm_ticketPrices');
+                localStorage.removeItem('zkm_ticketOrder');
+                localStorage.removeItem('ZKM_transit_ticketCounts');
+                localStorage.removeItem('ZKM_transit_ticketPrices');
+                localStorage.removeItem('ZKM_transit_ticketOrder');
+                localStorage.removeItem('metro_transit_ticketCounts');
+                localStorage.removeItem('metro_transit_ticketPrices');
+                localStorage.removeItem('metro_transit_ticketOrder');
                 metro_ticketCounts = {};
                 metro_ticketOrder = [];
+                zkm_ticketCounts = {};
+                zkm_ticketOrder = [];
+                ZKM_transit_ticketCounts = {};
+                ZKM_transit_ticketOrder = [];
+                metro_transit_ticketCounts = {};
+                metro_transit_ticketOrder = [];
                 window.location.href = 'zaplacone-gotowka.html';
             }, 3000);
         }

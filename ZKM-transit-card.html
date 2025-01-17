@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ticket Machine</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="common.css">
     <script>
         let currentLanguage = 'en'; // Default language session variable
         let isSelectionModalOpen = false; // Flag to track modal state
@@ -343,18 +344,33 @@
             }
 
             function confirmDateSelection() {
-                const day = daySelect.value;
-                const month = monthSelect.value;
-                const year = yearSelect.value;
-                const selectedDate = `${day}/${month}/${year}`;
-                
-                // Update summary text
+                const day = parseInt(daySelect.value, 10);
+                const month = parseInt(monthSelect.value, 10) - 1; // Months are 0-indexed in JavaScript
+                const year = parseInt(yearSelect.value, 10);
+
+                const selectedDate = new Date(year, month, day);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Reset time for today to midnight
+
+                // Check if the selected date is today or in the future
+                if (selectedDate < today) {
+                    // Update info modal with the message
+                    const infoModal = document.getElementById('info-modal');
+                    const infoContent = infoModal.querySelector('.modal-content p');
+                    infoContent.textContent = "You cannot select a date in the past. Please choose today or a future date.";
+                    infoModal.style.display = 'flex';
+                    return; // Exit without closing the modal or updating the summary
+                }
+
+                // Update summary text if the date is valid
                 const summary = document.querySelector(".summary");
-                const newSummaryDetail = `Validity Start Date: ${selectedDate}`;
+                const newSummaryDetail = `Validity Start Date: ${day}/${month + 1}/${year}`; // Add 1 to the month for display
                 summary.innerHTML += newSummaryDetail;
 
                 closeDateSelectionModal();
             }
+
+
 
             window.closeDateSelectionModal = closeDateSelectionModal;
             window.confirmDateSelection = confirmDateSelection;
@@ -642,6 +658,11 @@
             max-width: 800px;
         }
 
+        .select {
+            max-height: 50px;
+            overflow-y: scroll;
+        }
+
 
 
     </style>
@@ -804,11 +825,11 @@
             <div class="modal-content">
                 <h2>Select Validity Start Date</h2>
                 <label for="day">Day:</label>
-                <select id="day"></select>
+                <select id="day" class="date-select"></select>
                 <label for="month">Month:</label>
-                <select id="month"></select>
+                <select id="month" class="date-select"></select>
                 <label for="year">Year:</label>
-                <select id="year"></select>
+                <select id="year" class="date-select"></select>
                 <br><br>
                 <button class="summary-button" onclick="confirmDateSelection()">Confirm</button>
                 <!-- <button class="close-modal" onclick="closeDateSelectionModal()">Cancel</button> -->

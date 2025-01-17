@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ticket Machine</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="common.css">
     <script>
         let currentLanguage = localStorage.getItem('currentLanguage') || 'en';
 
@@ -53,70 +54,9 @@
         document.addEventListener("DOMContentLoaded", updateTime);
     </script>
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f8f9fa;
-            font-family: 'Nunito', sans-serif;
-        }
-
-        .container {
-            width: 10in;
-            height: 6.633in;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            overflow: hidden;
-            background-color: white;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        .navbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px;
-            background-color: #f0f0f0;
-            height: 66px;
-        }
-
-        .nav-left, .nav-center, .nav-right {
-            display: flex;
-            align-items: center;
-        }
-
-        .logo {
-            height: 44px;
-            width: auto;
-            margin-right: 10px;
-        }
-
-        .nav-center {
-            flex-grow: 1;
-            justify-content: center;
-        }
-
-        .nav-button {
-            margin-left: 10px;
-            padding: 10px 15px;
-            font-size: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
         .nav-button img {
             height: 40px;
             width: auto;
-        }
-
-        #date-time {
-            font-size: 24px;
-            font-weight: bold;
         }
 
         .content {
@@ -133,6 +73,9 @@
         }
 
         .side button {
+            border: 2px solid #979797;
+            border-radius: 8px;
+            cursor: pointer;
             display: block;
             margin: 20px auto;
             width: 80%;

@@ -58,10 +58,26 @@
         });
 
         document.addEventListener("DOMContentLoaded", () => {
-        setTimeout(() => {
-            window.location.href = "ZKM-transit-card.html";
-        }, 2000); // 2000 milliseconds = 2 seconds
-    });
+            document.addEventListener("keydown", (event) => {
+                switch (event.key) {
+                    case "1":
+                        window.location.href = "ZKM-transit-card.html";
+                        break;
+                    case "2":
+                        window.location.href = "ZKM-transit-card-normal.html";
+                        break;
+                    case "3":
+                        window.location.href = "ZKM-transit-card-normal-bearer.html";
+                        break;
+                    default:
+                        break;
+                }
+            });
+
+            // setTimeout(() => {
+            //     window.location.href = "ZKM-transit-card.html";
+            // }, 2000);
+        });
     </script>
     <style>
         body {

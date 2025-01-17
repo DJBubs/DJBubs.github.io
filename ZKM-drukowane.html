@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ticket Machine</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="common.css">
     <script>
         let currentLanguage = 'en'; // Default language session variable
 
@@ -184,77 +185,15 @@
 
     </script>
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f8f9fa;
-            font-family: 'Nunito', sans-serif;
-        }
-
-        .container {
-            width: 10in;
-            height: 6.633in;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            overflow: hidden;
-            background-color: white;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        .navbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px;
-            background-color: #f0f0f0;
-            height: 66px;
-        }
-
-        .nav-left, .nav-center, .nav-right {
-            display: flex;
-            align-items: center;
-        }
-
-        .logo {
-            height: 44px;
-            width: auto;
-            margin-right: 10px;
-        }
-
-        .nav-center {
-            flex-grow: 1;
-            justify-content: center;
-        }
-
-        .nav-button {
-            margin-left: 10px;
-            padding: 10px 15px;
-            font-size: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .nav-button img {
-            height: 40px;
-            width: auto;
-        }
-
-        #date-time {
-            font-size: 24px;
-            font-weight: bold;
-        }
 
         .content {
             display: flex;
             justify-content: space-around;
             align-items: flex-start;
-            padding: 20px;
+            padding-top: 10px;
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 20px;
             gap: 10px;
         }
 
@@ -277,16 +216,17 @@
         }
 
         .button {
+            user-select: none;
             display: inline-block;
             width: 80px; /* Reduced size */
             height: 80px; /* Reduced size */
             font-size: 24px; /* Adjusted font size */
             text-align: center;
             line-height: 80px; /* Adjusted line height */
-            border: 1px solid #ccc;
             border-radius: 8px;
-            background-color: #e0e0e0;
+            background-color: #f0f0f0;
             cursor: pointer;
+            border: 2px solid #979797;
         }
 
         .summary-header {
@@ -295,37 +235,55 @@
         }
 
         .summary {
+            position: relative; 
             padding: 20px;
-            text-align: left;
             font-size: 18px;
             font-weight: normal;
             background-color: #f8f9fa;
             border-top: 2px solid #ccc;
-            position: relative;
-            white-space: pre-wrap; /* Preserve line breaks */
+            height: 154px;
+            /* overflow-y: scroll;
+            direction: rtl;
+            text-align: left; */
         }
+
+        .summary-content {
+            direction: ltr;
+            white-space: pre-wrap;
+        }
+
 
         .summary-buttons {
             display: flex;
             flex-direction: column;
             gap: 10px;
             position: absolute;
-            right: 20px; /* Adjust for desired alignment */
-            top: 50px; /* Updated to fixed value */
+            right: 20px;
+            top: 20px;
         }
+
+        /* #pay-with-cash {
+            position: relative;
+            top: 100px;
+            right:20px
+        }
+
+        #pay-with-card {
+            position: relative;
+            top: 100px;
+            right:20px
+        } */
 
         .summary-button {
             padding: 10px 20px;
             font-size: 24px;
-            background-color: #007bff;
+            background-color: #237edf;
             color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-        }
-
-        .summary-button:hover {
-            background-color: #0056b3;
+            height: 72px;
+            width: 160px;
         }
 
         #language-modal, #help-modal, #cash-payment-modal, #card-payment-modal {
@@ -386,7 +344,7 @@
                 <button class="nav-button" style="height: 66px; width: 120px;" onclick="resetLocalStorage(); window.location.href='index.html'">Cancel</button>
             </div>
         </nav>
-        <div class="site-info" style="text-align: center; font-size: 20px; padding: 10px; font-weight: bold;">
+        <div class="site-info">
             ZKM Gdynia Tickets: Printed Tickets
         </div>
         <main class="content">
@@ -432,10 +390,12 @@
         </main>
 
         <div class="summary">
-            Summary: 0,00 PLN
+            <div class="summary-content">
+                Summary: 0,00 PLN
+            </div>
             <div class="summary-buttons">
-                <button class="summary-button" onclick="openCashPaymentModal()" disabled>Buy with Cash</button>
-                <button class="summary-button" onclick="openCardPaymentModal()" disabled>Buy with Card</button>
+                <button id="buy-with-cash" class="summary-button" onclick="openCashPaymentModal()" disabled>Buy with Cash</button>
+                <button id="buy-with-card" class="summary-button" onclick="openCardPaymentModal()" disabled>Buy with Card</button>
             </div>
         </div>
 

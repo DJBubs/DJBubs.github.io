@@ -196,6 +196,50 @@
 
     </script>
     <style>
+        .row {
+            text-align: center
+        }
+
+        #column-24h-1{
+            width: 176px;
+        }
+
+        #column-24h-2{
+            width: 704px;
+        }
+
+        td .row .button {
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            font-size: 35px;
+        }
+
+        #title-left {
+            margin-bottom: 30px;
+        }
+
+        #row-id-2-electric-boogaloo {
+            margin-top: 10px;
+            margin-bottom: -6px;
+        }
+
+        #row-id {
+            margin-top:12px;
+            margin-bottom: 6px;
+        }
+
+        .button {
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            font-size: 35px;
+        }
+        
+        .buttons-row {
+            height: 100px;
+        }
+
 
     </style>
 </head>
@@ -219,20 +263,20 @@
             Metropolitan Area Tickets: Printed Tickets: 24 Hour Tickets
         </div>
         <main class="content">
-            <div class="column" style="width: 176px">
-                <div class="row title">Municipal ticket</div>
-                <div class="row type">Normal 24,00 PLN</div>
+            <div class="column" id="column-24h-1">
+                <div class="row title" id="title-left">Municipal ticket</div>
+                <div id="row-id-2-electric-boogaloo" class="row type">Normal 24,00 PLN</div>
                 <div class="row">
                     <div class="button">+</div>
                     <div class="button">-</div>
                 </div>
-                <div class="row type">Reduced 12,00 PLN</div>
+                <div id="row-id-2-electric-boogaloo" class="row type">Reduced 12,00 PLN</div>
                 <div class="row">
                     <div class="button">+</div>
                     <div class="button">-</div>
                 </div>
             </div>
-            <div class="column" style="width: 704px">
+            <div class="column" id="column-24h-2">
                 <div class="row title">Railway-municipal ticket</div>
                 <table>
                     <tr>
@@ -241,47 +285,47 @@
                         <th class="row subtext">Railway+Gdynia</th>
                         <th class="row subtext">Railway+Wejherowo</th>
                     </tr>
-                    <tr>
-                        <td><div class="row type">Normal 34,00 PLN</div>
+                    <tr class="buttons-row">
+                        <td><div id='row-id' class="row type">Normal 34,00 PLN</div>
                             <div class="row">
                                 <div class="button">+</div>
                                 <div class="button">-</div>
                             </div>
                             </td>
-                        <td><div class="row type">Normal 30,00 PLN</div>
+                        <td><div id='row-id' class="row type">Normal 30,00 PLN</div>
                             <div class="row">
                                 <div class="button">+</div>
                                 <div class="button">-</div>
                             </div></td>
-                        <td><div class="row type">Normal 30,00 PLN</div>
+                        <td><div id='row-id' class="row type">Normal 30,00 PLN</div>
                             <div class="row">
                                 <div class="button">+</div>
                                 <div class="button">-</div>
                             </div></td>
-                        <td><div class="row type">Normal 30,00 PLN</div>
+                        <td><div id='row-id' class="row type">Normal 30,00 PLN</div>
                             <div class="row">
                                 <div class="button">+</div>
                                 <div class="button">-</div>
                             </div></td>
                     </tr>
-                    <tr>
-                        <td><div class="row type">Reduced 17,00 PLN</div>
+                    <tr class="buttons-row">
+                        <td><div id='row-id' class="row type">Reduced 17,00 PLN</div>
                             <div class="row">
                                 <div class="button">+</div>
                                 <div class="button">-</div>
                             </div></td>
-                        <td><div class="row type">Reduced 15,00 PLN</div>
+                        <td><div id='row-id' class="row type">Reduced 15,00 PLN</div>
                             <div class="row">
                                 <div class="button">+</div>
                                 <div class="button">-</div>
                             </div></td>
-                        <td><div class="row type">Reduced 15,00 PLN</div>
+                        <td><div id='row-id' class="row type">Reduced 15,00 PLN</div>
                             <div class="row">
                                 <div class="button">+</div>
                                 <div class="button">-</div>
                             </div></td>
                             <td>
-                                <div class="row type">Reduced 15,00 PLN</div>
+                                <div id='row-id' class="row type">Reduced 15,00 PLN</div>
                             <div class="row">
                                 <div class="button">+</div>
                                 <div class="button">-</div>

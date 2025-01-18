@@ -31,45 +31,37 @@
         document.addEventListener("DOMContentLoaded", () => {
             const summary = document.querySelector(".summary");
             const rows = document.querySelectorAll(".column");
-            let metro_transit_ticketCounts = JSON.parse(localStorage.getItem('metro_transit_ticketCounts')) || {};
-            const metro_transit_ticketPrices = JSON.parse(localStorage.getItem('metro_transit_ticketPrices')) || {};
-            let metro_transit_ticketOrder = JSON.parse(localStorage.getItem('metro_transit_ticketOrder')) || [];
+            let metro_transit_ticketCounts = JSON.parse(localStorage.getItem("metro_transit_ticketCounts")) || {};
+            const metro_transit_ticketPrices = JSON.parse(localStorage.getItem("metro_transit_ticketPrices")) || {};
+            let metro_transit_ticketOrder = JSON.parse(localStorage.getItem("metro_transit_ticketOrder")) || [];
 
-            rows.forEach(column => {
+            rows.forEach((column) => {
                 const titleElement = column.querySelector(".row.title");
                 const subtextElements = column.querySelectorAll(".row.subtext");
                 const types = column.querySelectorAll(".row.type");
                 const buttons = column.querySelectorAll(".button");
 
-                // Correct subtext mapping logic
-                const subtextMapping = [
-                    "Gdansk+Sopot",
-                    "Sopot+Gdynia",
-                    "One provider network",
-                    "MZKZG area"
-                ];
-
                 types.forEach((type, typeIndex) => {
                     const typeName = type.textContent.trim();
                     const typeId = typeName.includes("Normal") ? "normal" : "reduced";
 
-                    // Map subtext based on button ID pairing (0,4), (1,5), etc.
-                    const subtextIndex = Math.floor(typeIndex % 4); // Cycle through subtextMapping every 4 types
-                    const subtext = subtextMapping[subtextIndex];
+                    // Handle subtext, use "N/A" if blank
+                    const subtext = subtextElements[typeIndex]?.textContent.trim() || "";
+                    const title = titleElement.textContent.trim();
 
                     // Generate the ticket key for the summary
-                    const key = subtext
-                        ? `${titleElement.textContent} (${subtext}) - ${typeName}`
-                        : `${titleElement.textContent} - ${typeName}`;
+                    const key = `${title} ${subtext} - ${typeName}`;
 
                     // Extract the price from the ticket type
-                    const price = parseFloat(typeName.match(/\d+,?\d*/)[0].replace(",", "."));
+                    const priceMatch = typeName.match(/\d+,?\d*/);
+                    const price = priceMatch ? parseFloat(priceMatch[0].replace(",", ".")) : 0;
+
                     if (!(key in metro_transit_ticketCounts)) {
                         metro_transit_ticketCounts[key] = 0;
                         metro_transit_ticketPrices[key] = price;
                     }
 
-                    // Attach event listeners to the "Add" and "Remove" buttons using IDs
+                    // Attach event listeners to the "Add" and "Remove" buttons
                     const addButton = buttons[typeIndex * 2];
                     const removeButton = buttons[typeIndex * 2 + 1];
 
@@ -77,38 +69,44 @@
                     removeButton.id = `${typeId}-remove-${typeIndex}`;
 
                     addButton.addEventListener("click", () => {
-                        if (addButton.disabled) {
-                            return; // Do nothing if the button is disabled
-                        }
+                        if (addButton.disabled) return; // Do nothing if the button is disabled
+
                         if (!metro_transit_ticketOrder.includes(key)) {
                             metro_transit_ticketOrder.push(key); // Add to the order
                         }
+
                         metro_transit_ticketCounts[key]++;
-                        document.querySelectorAll(".button").forEach(button => {
-                            button.disabled = true; // Disable all buttons
-                            button.classList.add("disabled-button"); // Add opacity effect
+
+                        // Update button states
+                        document.querySelectorAll(".button").forEach((button) => {
+                            button.disabled = true;
+                            button.classList.add("disabled-button");
                         });
-                        removeButton.disabled = false; // Keep remove button for this ticket enabled
+
+                        removeButton.disabled = false;
                         removeButton.classList.remove("disabled-button");
+
                         saveToLocalStorage();
                         updateSummary();
                     });
 
                     removeButton.addEventListener("click", () => {
-                        if (removeButton.disabled) {
-                            return; // Do nothing if the button is disabled
-                        }
+                        if (removeButton.disabled) return; // Do nothing if the button is disabled
+
                         if (metro_transit_ticketCounts[key] > 0) {
                             metro_transit_ticketCounts[key]--;
+
                             if (metro_transit_ticketCounts[key] === 0) {
-                                metro_transit_ticketOrder = metro_transit_ticketOrder.filter(item => item !== key);
-                                    document.querySelectorAll(".button").forEach(button => {
-                                    button.disabled = false; // Enable all buttons
-                                    button.classList.remove("disabled-button"); // Remove opacity effect
-                                    
+                                metro_transit_ticketOrder = metro_transit_ticketOrder.filter(
+                                    (item) => item !== key
+                                );
+
+                                document.querySelectorAll(".button").forEach((button) => {
+                                    button.disabled = false;
+                                    button.classList.remove("disabled-button");
                                 });
-                                
                             }
+
                             saveToLocalStorage();
                             updateSummary();
                         }
@@ -117,32 +115,38 @@
             });
 
             function saveToLocalStorage() {
-                localStorage.setItem('metro_transit_ticketCounts', JSON.stringify(metro_transit_ticketCounts));
-                localStorage.setItem('metro_transit_ticketPrices', JSON.stringify(metro_transit_ticketPrices));
-                localStorage.setItem('metro_transit_ticketOrder', JSON.stringify(metro_transit_ticketOrder));
+                localStorage.setItem("metro_transit_ticketCounts", JSON.stringify(metro_transit_ticketCounts));
+                localStorage.setItem("metro_transit_ticketPrices", JSON.stringify(metro_transit_ticketPrices));
+                localStorage.setItem("metro_transit_ticketOrder", JSON.stringify(metro_transit_ticketOrder));
             }
 
             function resetLocalStorage() {
+                
                 localStorage.removeItem('metro_transit_ticketCounts');
-                localStorage.removeItem('metro_transit_ticketPrices');
-                localStorage.removeItem('metro_transit_ticketOrder');
-                metro_transit_ticketCounts = {};
-                metro_transit_ticketOrder = [];
+                localStorage.removeItem('metro_ticketPrices');
+                localStorage.removeItem('metro_ticketOrder');
+                metro_ticketCounts = {};
+                metro_ticketOrder = [];
                 updateSummary();
-                window.location.href='index.html';
+                window.location.href = 'index.html';
             }
 
             function updateSummary() {
                 let totalPrice = 0;
                 let totalTickets = 0;
+
                 const details = metro_transit_ticketOrder
-                    .filter(key => metro_transit_ticketCounts[key] > 0)
-                    .map(key => {
-                        totalPrice += metro_transit_ticketPrices[key] * metro_transit_ticketCounts[key];
-                        totalTickets += metro_transit_ticketCounts[key];
-                        return `${key}: ${metro_transit_ticketCounts[key]}`;
+                    .filter((key) => metro_transit_ticketCounts[key] > 0)
+                    .map((key) => {
+                        const count = metro_transit_ticketCounts[key];
+                        const price = metro_transit_ticketPrices[key];
+
+                        totalPrice += price * count;
+                        totalTickets += count;
+
+                        return `${key}: ${count}`;
                     })
-                    .join("\n");
+                    .join("<br>");
 
                 const summaryButtonsHTML = `
                     <div class="summary-buttons">
@@ -152,7 +156,7 @@
                 `;
 
                 const summaryHeader = `<span class="summary-header">Summary: ${totalPrice.toFixed(2)} PLN</span>`;
-                const summaryDetails = details ? `<div style='max-height: 100px; overflow-y: auto; text-align: left; width='80%';>${details.replace(/\n/g, '<br>')}</div>` : '';
+                const summaryDetails = details ? `<div id="ticket-div">${details}</div>` : "";
 
                 summary.innerHTML = `${summaryHeader}<br>${summaryDetails}<br>${summaryButtonsHTML}`;
             }
@@ -160,8 +164,12 @@
             // Initialize summary on page load
             updateSummary();
 
-            document.querySelector(".nav-right .nav-button:last-child").addEventListener("click", resetLocalStorage);
+            const cancelButton = document.querySelector(".nav-right .nav-button:last-child");
+            if (cancelButton) {
+                cancelButton.addEventListener("click", resetLocalStorage);
+            }
         });
+
 
         document.addEventListener("DOMContentLoaded", () => {
             const addButtons = document.querySelectorAll(".add-button-id");
@@ -334,283 +342,36 @@
         }
 
 
-
-
-
     </script>
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f8f9fa;
-            font-family: 'Nunito', sans-serif;
-        }
-
-        .container {
-            width: 10in;
-            height: 6.633in;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            overflow: hidden;
-            background-color: white;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        .navbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px;
-            background-color: #f0f0f0;
-            height: 66px;
-        }
-
-        .nav-left, .nav-center, .nav-right {
-            display: flex;
-            align-items: center;
-        }
-
-        .logo {
-            height: 44px;
-            width: auto;
-            margin-right: 10px;
-        }
-
-        .nav-center {
-            flex-grow: 1;
-            justify-content: center;
-        }
-
-        .nav-button {
-            margin-left: 10px;
-            padding: 10px 15px;
-            font-size: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .nav-button img {
-            height: 40px;
-            width: auto;
-        }
-
-        #date-time {
-            font-size: 24px;
-            font-weight: bold;
+        .site-info {
+            padding-bottom: 50px;
         }
 
         .content {
-            display: flex;
-            justify-content: space-evenly;
-            align-items: flex-start;
-            padding: 20px;
-            gap: 20px;
-            flex-wrap: wrap;
-            width: 100%;
-            box-sizing: border-box;
+            padding-bottom: 66px;
         }
-
-        .column {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .row.title {
-            font-weight: bold;
-            font-size: 24px;
+        table {
             text-align: center;
         }
 
-        .row.subtext {
-            text-align: center;
+        .row {
+            margin-top: 5px;
+            margin-right: 15px;
+        }
+        .row type {
+            padding-bottom: 20px;
         }
 
-        .row.type {
-            font-size: 18px;
-            text-align: center;
-            color: #777;
+        th {
+            padding-bottom: 10px;
         }
 
         .button {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            font-size: 24px;
-            text-align: center;
-            line-height: 20px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            background-color: #e0e0e0;
-            cursor: pointer;
+            width: 70px;
+            height: 70px;
+            line-height: 70px;
         }
-
-        .add-button-id {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            font-size: 24px;
-            text-align: center;
-            line-height: 20px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            background-color: #e0e0e0;
-            cursor: pointer;
-        }
-
-        .summary-header {
-            font-weight: bold;
-            font-size: 24px;
-        }
-
-        .summary {
-            position: relative; 
-            padding: 20px;
-            font-size: 18px;
-            font-weight: normal;
-            background-color: #f8f9fa;
-            border-top: 2px solid #ccc;
-            height: 154px; /* Fixed height */
-            overflow-y: auto; /* Adds scrollbar when content overflows */
-        }
-
-        .summary-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            position: absolute;
-            right: 20px;
-            top: 50px;
-        }
-
-        .summary-button {
-            padding: 10px 20px;
-            font-size: 24px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .summary-button:hover {
-            background-color: #0056b3;
-        }
-
-        #language-modal, #help-modal, #cash-payment-modal, #card-payment-modal {
-            display: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-        }
-
-        .modal-content {
-            background-color: white;
-            padding: 40px;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 18px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 85%;
-            max-width: 800px;
-        }
-
-        .modal-content img {
-            margin: 20px;
-            cursor: pointer;
-        }
-
-        .close-modal {
-            background-color: red;
-            color: white;
-            padding: 15px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 20px;
-            font-size: 24px;
-        }
-
-        .confirm-button {
-            background-color: #237edf;
-            color: white;
-            padding: 15px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 20px;
-            font-size: 24px;
-        }
-
-        #date-selection-modal {
-            display: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-        }
-
-        .modal-content {
-            background-color: white;
-            padding: 40px;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 18px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 85%;
-            max-width: 800px;
-        }
-
-        .button:disabled {
-            cursor: not-allowed;
-        }
-
-        .disabled-button {
-            opacity: 0.5; /* Add opaque effect */
-        }
-
-        #info-modal {
-            display: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-        }
-
-        .modal-content {
-            background-color: white;
-            padding: 40px;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 18px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 85%;
-            max-width: 800px;
-        }
-
-
 
     </style>
 </head>
@@ -631,35 +392,32 @@
             </div>
             
         </nav>
-        <div class="site-info" style="text-align: center; font-size: 20px; padding: 10px; font-weight: bold;">
-            Metropolitan Area Tickets: Transit Card (Reduced)
+        <div class="site-info">
+            Metropolitan Area Tickets: Transit Card: Reduced Monthly Ticket
         </div>
         <main class="content">
-            
-            <div class="column" style="width: 176px">
-                <div class="row title">Municipal ticket</div>
-                <div class="row subtext">1 Month</div>
-                <!-- <div class="row type">Normal 156,00 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div> -->
-                <div class="row type">Reduced 78,00 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div>
-            </div>
-            <div class="column" style="width: 704px">
-                <div class="row title">Municipal ticket combined with other providers (1 Month)</div>
+
+
+            <div class="column">  
                 <table>
                     <tr>
-                        <th class="row subtext">Gdansk+Sopot</th>
-                        <th class="row subtext">Sopot+Gdynia</th>
-                        <th class="row subtext">One provider network</th>
-                        <th class="row subtext">MZKZG area</th>
+                        <th><text class="row title">Municipal ticket</text></th>
+                        <th colspan="4"><text class="row title">Municipal ticket combined with other providers</text></th>
+                    </tr>
+                    <tr>
+                        <th><text class="row subtext"></text></th>
+                        <th><text class="row subtext">Gdansk+Sopot</text></th>
+                        <th><text class="row subtext">Sopot+Gdynia</text></th>
+                        <th><text class="row subtext">One provider network</text></th>
+                        <th><text class="row subtext">MZKZG area</text></th>
                     </tr>
                     <!-- <tr>
+                        <td><div class="row type">Normal 156,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Gdansk+Sopot">+</div>
+                                <div class="button">-</div>
+                            </div>
+                            </td>
                         <td><div class="row type">Normal 80,00 PLN</div>
                             <div class="row">
                                 <div class="button add-button-id" id="Gdansk+Sopot">+</div>
@@ -683,6 +441,11 @@
                             </div></td>
                     </tr> -->
                     <tr>
+                        <td><div class="row type">Reduced 78,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Gdansk+Sopot" >+</div>
+                                <div class="button">-</div>
+                            </div></td>
                         <td><div class="row type">Reduced 40,00 PLN</div>
                             <div class="row">
                                 <div class="button add-button-id" id="Gdansk+Sopot" >+</div>

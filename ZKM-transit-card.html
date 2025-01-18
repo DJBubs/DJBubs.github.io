@@ -153,7 +153,7 @@
                 `;
 
                 const summaryHeader = `<span class="summary-header">Summary: ${totalPrice.toFixed(2)} PLN</span>`;
-                const summaryDetails = details ? `<div style='max-height: 200px; overflow-y: auto; text-align: left;'>${details.replace(/\n/g, '<br>')}</div>` : '';
+                const summaryDetails = details ? `<div style='max-height: 100px; overflow-y: auto; text-align: left; width='80%';>${details.replace(/\n/g, '<br>')}</div>` : '';
 
                 summary.innerHTML = `${summaryHeader}<br>${summaryDetails}<br>${summaryButtonsHTML}`;
             }
@@ -617,12 +617,6 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             width: 85%;
             max-width: 800px;
-        }
-
-        .select {
-            max-height: 50px;
-            overflow-y: auto;
-            display: block;
         }
 
         .date-input {

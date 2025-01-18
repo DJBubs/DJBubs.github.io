@@ -256,57 +256,9 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            const daySelect = document.getElementById('day');
-            const monthSelect = document.getElementById('month');
-            const yearSelect = document.getElementById('year');
+            const dateInput = document.getElementById("start-date");
             const currentDate = new Date();
-
-            // Populate the dropdowns
-            populateDropdowns();
-
-            function populateDropdowns() {
-                for (let i = 1; i <= 31; i++) {
-                    daySelect.add(new Option(i, i));
-                }
-                for (let i = 1; i <= 12; i++) {
-                    monthSelect.add(new Option(i, i));
-                }
-                const currentYear = currentDate.getFullYear();
-                for (let i = currentYear; i <= currentYear + 5; i++) {
-                    yearSelect.add(new Option(i, i));
-                }
-
-                // Set defaults to the current date
-                daySelect.value = currentDate.getDate();
-                monthSelect.value = currentDate.getMonth() + 1; // Months are 0-indexed
-                yearSelect.value = currentYear;
-            }
-
-            function updateDays() {
-                const selectedYear = parseInt(yearSelect.value, 10);
-                const selectedMonth = parseInt(monthSelect.value, 10);
-
-                // Determine the number of days in the selected month/year
-                const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
-
-                // Adjust day dropdown
-                const currentDay = parseInt(daySelect.value, 10);
-                daySelect.innerHTML = ''; // Clear existing options
-                for (let i = 1; i <= daysInMonth; i++) {
-                    daySelect.add(new Option(i, i));
-                }
-
-                // Retain the previously selected day if valid, otherwise set to the last day of the month
-                if (currentDay <= daysInMonth) {
-                    daySelect.value = currentDay;
-                } else {
-                    daySelect.value = daysInMonth;
-                }
-            }
-
-            // Update days when month or year changes
-            monthSelect.addEventListener('change', updateDays);
-            yearSelect.addEventListener('change', updateDays);
+            const formattedDate = currentDate.toISOString().split("T")[0]; // Get YYYY-MM-DD format
 
             // document.querySelectorAll(".button").forEach(button => {
             //     button.addEventListener("click", openDateSelectionModal);
@@ -318,63 +270,61 @@
             
 
             function openDateSelectionModal() {
-            // Calculate the total number of tickets in the summary
-            if (isSelectionModalOpen) {
-                openInfoModal();
-                return; // Prevent multiple openings
+                // Calculate the total number of tickets in the summary
+                if (isSelectionModalOpen) {
+                    openInfoModal();
+                    return; // Prevent multiple openings
+                }
+                isSelectionModalOpen = true; // Set flag to true
+
+                dateInput.value = formattedDate;
+                dateInput.min = formattedDate;
+                
+                document.getElementById('date-selection-modal').style.display = 'flex';
             }
-            isSelectionModalOpen = true; // Set flag to true
-
-
-            // Proceed to open the modal
-            daySelect.value = currentDate.getDate();
-            monthSelect.value = currentDate.getMonth() + 1;
-            yearSelect.value = currentDate.getFullYear();
-            updateDays(); // Ensure days are valid for the current month/year
-            document.getElementById('date-selection-modal').style.display = 'flex';
-        }
             function resetModalFlagAndReturn() {
                 isSelectionModalOpen = false; // Reset the flag
                 //window.location.href = 'index.html'; // Redirect to return
             }
-
-
             function closeDateSelectionModal() {
                 document.getElementById('date-selection-modal').style.display = 'none';
             }
 
+
             function confirmDateSelection() {
-                const day = parseInt(daySelect.value, 10);
-                const month = parseInt(monthSelect.value, 10) - 1; // Months are 0-indexed in JavaScript
-                const year = parseInt(yearSelect.value, 10);
-
-                const selectedDate = new Date(year, month, day);
+                const selectedDate = new Date(dateInput.value);
                 const today = new Date();
-                today.setHours(0, 0, 0, 0); // Reset time for today to midnight
+                today.setHours(0, 0, 0, 0); // Reset time for comparison
 
-                // Check if the selected date is today or in the future
+                // Check if the selected date is valid
                 if (selectedDate < today) {
-                    // Update info modal with the message
-                    const infoModal = document.getElementById('info-modal');
-                    const infoContent = infoModal.querySelector('.modal-content p');
+                    // Show error if the selected date is in the past
+                    const infoModal = document.getElementById("info-modal");
+                    const infoContent = infoModal.querySelector(".modal-content p");
                     infoContent.textContent = "You cannot select a date in the past. Please choose today or a future date.";
-                    infoModal.style.display = 'flex';
-                    return; // Exit without closing the modal or updating the summary
+                    infoModal.style.display = "flex";
+                    return;
                 }
 
-                // Update summary text if the date is valid
+                console.log("Selected Date:", selectedDate);
+                console.log("Today's Date:", today);
+
+                // Add the selected date to the summary
                 const summary = document.querySelector(".summary");
-                const newSummaryDetail = `Validity Start Date: ${day}/${month + 1}/${year}`; // Add 1 to the month for display
+                const formattedSelectedDate = selectedDate.toLocaleDateString();
+                const newSummaryDetail = `<br>Validity Start Date: ${formattedSelectedDate}`;
                 summary.innerHTML += newSummaryDetail;
 
                 closeDateSelectionModal();
-            }
-
+            };
 
 
             window.closeDateSelectionModal = closeDateSelectionModal;
             window.confirmDateSelection = confirmDateSelection;
+
         });
+
+        
 
         function openInfoModal() {
             const infoModal = document.getElementById('info-modal');
@@ -602,6 +552,17 @@
             font-size: 24px;
         }
 
+        .confirm-button {
+            background-color: #237edf;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 24px;
+        }
+
         #date-selection-modal {
             display: none;
             position: absolute;
@@ -660,8 +621,17 @@
 
         .select {
             max-height: 50px;
-            overflow-y: scroll;
+            overflow-y: auto;
+            display: block;
         }
+
+        .date-input {
+    padding: 10px;
+    font-size: 18px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
 
 
 
@@ -824,17 +794,14 @@
         <div id="date-selection-modal" class="help-modal">
             <div class="modal-content">
                 <h2>Select Validity Start Date</h2>
-                <label for="day">Day:</label>
-                <select id="day" class="date-select"></select>
-                <label for="month">Month:</label>
-                <select id="month" class="date-select"></select>
-                <label for="year">Year:</label>
-                <select id="year" class="date-select"></select>
+                <label for="start-date">Select Date:</label>
+                <input type="date" id="start-date" class="date-input">
                 <br><br>
-                <button class="summary-button" onclick="confirmDateSelection()">Confirm</button>
+                <button class="confirm-button" onclick="confirmDateSelection()">Confirm</button>
                 <!-- <button class="close-modal" onclick="closeDateSelectionModal()">Cancel</button> -->
             </div>
         </div>
+        
 
         <div id="info-modal" class="help-modal">
             <div class="modal-content">

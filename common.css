@@ -268,7 +268,7 @@ body {
 }
 
 .disabled-button {
-    opacity: 0.5; /* Add opaque effect */
+    opacity: 0.1; /* Add opaque effect */
 }
 
 #info-modal {
@@ -289,4 +289,54 @@ body {
     font-size: 18px;
     border: 1px solid #ccc;
     border-radius: 5px;
+}
+
+.custom-confirm-button {
+    background-color: #237edf !important; /* Button color */
+    color: white !important; /* Text color */
+    border: none !important; /* Remove border */
+    padding: 10px 20px !important; /* Adjust padding */
+    font-size: 16px !important; /* Adjust font size */
+    border-radius: 5px !important; /* Add rounded corners */
+}
+
+.custom-cancel-button {
+    background-color: #ccc !important; /* Cancel button color */
+    color: black !important; /* Text color */
+    border: none !important; /* Remove border */
+    padding: 10px 20px !important; /* Adjust padding */
+    font-size: 16px !important; /* Adjust font size */
+    border-radius: 5px !important; /* Add rounded corners */
+}
+
+.ui-datepicker {
+    font-size: 1.8rem !important; /* Increase the font size for the entire datepicker */
+    width: 550px !important; /* Increase the overall width */
+    height: auto !important; /* Adjust height dynamically */
+}
+
+.ui-datepicker-calendar td a {
+    font-size: 1.6rem !important; /* Larger font size for individual dates */
+    padding: 15px !important; /* Increase clickable area */
+}
+
+.ui-datepicker-header {
+    font-size: 2rem !important; /* Larger header text (month/year) */
+    padding: 10px !important; /* Add more padding around the header */
+}
+
+.ui-state-default {
+    font-size: 1.5rem !important; /* Larger font size for date buttons */
+    padding: 10px 15px !important; /* Bigger buttons */
+}
+
+.ui-state-hover,
+.ui-state-active {
+    background-color: #237edf !important; /* Highlight color */
+    color: white !important; /* Text color for hover/active state */
+}
+
+#ui-datepicker-div {
+    top: 20% !important;
+    left:31% !important;
 }

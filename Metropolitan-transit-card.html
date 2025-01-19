@@ -6,6 +6,9 @@
     <title>Ticket Machine</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         let currentLanguage = 'en'; // Default language session variable
         let isSelectionModalOpen = false; // Flag to track modal state
@@ -257,10 +260,13 @@
             //     button.addEventListener("click", openDateSelectionModal);
             // });
 
-            document.querySelectorAll(".add-button-id").forEach(button => {
-                button.addEventListener("click", openDateSelectionModal);
-            });
+            // document.querySelectorAll(".add-button-id").forEach(button => {
+            //     button.addEventListener("click", openDateSelectionModal);
+            // });
             
+            document.querySelectorAll(".add-button-id").forEach(button => {
+                button.addEventListener("click", openModal);
+            });
 
             function openDateSelectionModal() {
                 // Calculate the total number of tickets in the summary
@@ -366,6 +372,57 @@
             justify-content: left;
             margin-left: 50px;
         }
+
+        .custom-confirm-button {
+            background-color: #237edf !important; /* Button color */
+            color: white !important; /* Text color */
+            border: none !important; /* Remove border */
+            padding: 10px 20px !important; /* Adjust padding */
+            font-size: 16px !important; /* Adjust font size */
+            border-radius: 5px !important; /* Add rounded corners */
+        }
+
+        .custom-cancel-button {
+            background-color: #ccc !important; /* Cancel button color */
+            color: black !important; /* Text color */
+            border: none !important; /* Remove border */
+            padding: 10px 20px !important; /* Adjust padding */
+            font-size: 16px !important; /* Adjust font size */
+            border-radius: 5px !important; /* Add rounded corners */
+        }
+
+        .ui-datepicker {
+            font-size: 1.8rem !important; /* Increase the font size for the entire datepicker */
+            width: 550px !important; /* Increase the overall width */
+            height: auto !important; /* Adjust height dynamically */
+        }
+
+        .ui-datepicker-calendar td a {
+            font-size: 1.6rem !important; /* Larger font size for individual dates */
+            padding: 15px !important; /* Increase clickable area */
+        }
+
+        .ui-datepicker-header {
+            font-size: 2rem !important; /* Larger header text (month/year) */
+            padding: 10px !important; /* Add more padding around the header */
+        }
+
+        .ui-state-default {
+            font-size: 1.5rem !important; /* Larger font size for date buttons */
+            padding: 10px 15px !important; /* Bigger buttons */
+        }
+
+        .ui-state-hover,
+        .ui-state-active {
+            background-color: #237edf !important; /* Highlight color */
+            color: white !important; /* Text color for hover/active state */
+        }
+
+        #ui-datepicker-div {
+            top: 20% !important;
+            left:31% !important;
+        }
+
     </style>
 </head>
 <body>
@@ -517,7 +574,90 @@
             </div>
         </div>
         
+        <script>
+            function openModal() {
+                if (isSelectionModalOpen) {
+                    openInfoModal();
+                    return; // Prevent multiple openings
+                }
+                isSelectionModalOpen = true;
+                Swal.fire({
+                    title: 'Select a Date',
+                    html: '<input type="text" id="datepicker" class="swal2-input" placeholder="Select a date">',
+                    showCancelButton: true,
+                    confirmButtonText: 'Confirm',
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        confirmButton: 'custom-confirm-button',
+                        cancelButton: 'custom-cancel-button'
+                    },
+                    showClass: {
+                        popup: '' // Remove animation
+                    },
+                    hideClass: {
+                        popup: '' // Remove animation
+                    },
+                    didOpen: () => {
+                        // Set today's date as default
+                        const today = new Date();
+                        const formattedToday = today.toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'long',
+                            year: 'numeric'
+                        }); // Format: DD Month YYYY
+                        
+                        // Initialize jQuery UI Datepicker
+                        $("#datepicker").datepicker({
+                            dateFormat: "dd MM yy", // Format: DD Month YYYY
+                            minDate: 0, // Disable past dates
+                            defaultDate: today // Preselect today's date
+                        });
+
+                        // Pre-fill today's date in the input
+                        document.getElementById("datepicker").value = formattedToday;
+
+                        // Remove default button focus
+                        const confirmButton = document.querySelector(".swal2-confirm");
+                        if (confirmButton) {
+                            confirmButton.blur();
+                        }
+                    },
+                    preConfirm: () => {
+                        // Use the input value or fallback to today's date
+                        const selectedDate = document.getElementById('datepicker').value || new Date().toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'long',
+                            year: 'numeric'
+                        });
+                        return selectedDate;
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const selectedDate = result.value;
+                        console.log('Selected Date:', selectedDate);
+                        //Swal.fire(`You selected: ${selectedDate}`);
+                        addDateToSummary(selectedDate); // Add the date to the summary
+                    }
+                });
+            }
+
+            function addDateToSummary(date) {
+                const summaryElement = document.querySelector(".summary");
+                const dateElement = document.createElement("div");
+                dateElement.textContent = `Validation Date: ${date}`;
+                dateElement.style.marginTop = "10px"; // Add spacing
+                summaryElement.appendChild(dateElement); // Add the date to the summary
+            }
+        </script>
+
         
+        
+    
+        <!-- Include jQuery and jQuery UI -->
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+        <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+        <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    
 
         
     </div>

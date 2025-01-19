@@ -29,140 +29,110 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            const summary = document.querySelector(".summary");
-            const rows = document.querySelectorAll(".column");
-            let ZKM_transit_ticketCounts = JSON.parse(localStorage.getItem('ZKM_transit_ticketCounts')) || {};
-            const ZKM_transit_ticketPrices = JSON.parse(localStorage.getItem('ZKM_transit_ticketPrices')) || {};
-            let ZKM_transit_ticketOrder = JSON.parse(localStorage.getItem('ZKM_transit_ticketOrder')) || [];
+    const summary = document.querySelector(".summary");
+    const table = document.querySelector("table");
+    const rows = table.querySelectorAll("tr");
+    let ZKM_transit_ticketCounts = JSON.parse(localStorage.getItem("ZKM_transit_ticketCounts")) || {};
+    const ZKM_transit_ticketPrices = JSON.parse(localStorage.getItem("ZKM_transit_ticketPrices")) || {};
+    let ZKM_transit_ticketOrder = JSON.parse(localStorage.getItem("ZKM_transit_ticketOrder")) || [];
 
-            rows.forEach(column => {
-                const titleElement = column.querySelector(".row.title");
-                const subtextElements = column.querySelectorAll(".row.subtext");
-                const types = column.querySelectorAll(".row.type");
-                const buttons = column.querySelectorAll(".button");
+    // Extract titles from the first row
+    const titleElements = rows[0].querySelectorAll("th .row.title");
+    const titles = Array.from(titleElements).map((el) => el.textContent.trim());
 
-                // Correct subtext mapping logic
-                const subtextMapping = [
-                    "Regular and Night Lines",
-                    "Regular, Express and Night Lines",
-                    "Regular, Express and Night Lines",
-                    "(Sopot/Rumia/Kosakowo/Zukowo/Szemud/Wejherowo) Regular, Express and Night Lines",
-                    "(Including Lines N1 and 171) Regular, Express and Night Lines"
-                ];
+    // Extract subtexts from the second row
+    const subtextElements = rows[1].querySelectorAll("th .row.subtext");
+    const subtexts = Array.from(subtextElements).map((el) => el.textContent.trim());
 
-                types.forEach((type, typeIndex) => {
-                    const typeName = type.textContent.trim();
-                    const typeId = typeName.includes("Normal") ? "normal" : "reduced";
+    // Process ticket types and attach event listeners
+    rows.forEach((row, rowIndex) => {
+        if (rowIndex <= 1) return; // Skip title and subtext rows
 
-                    // Map subtext based on button ID pairing (0,4), (1,5), etc.
-                    const subtextIndex = Math.floor(typeIndex % 4); // Cycle through subtextMapping every 4 types
-                    const subtext = subtextMapping[subtextIndex];
+        const typeElements = row.querySelectorAll(".row.type");
+        const buttons = row.querySelectorAll(".button");
 
-                    // Generate the ticket key for the summary
-                    const key = subtext
-                        ? `${titleElement.textContent} (${subtext}) - ${typeName}`
-                        : `${titleElement.textContent} - ${typeName}`;
+        typeElements.forEach((typeElement, typeIndex) => {
+            const typeName = typeElement.textContent.trim();
+            const typeId = typeName.includes("Normal") ? "normal" : "reduced";
 
-                    // Extract the price from the ticket type
-                    const price = parseFloat(typeName.match(/\d+,?\d*/)[0].replace(",", "."));
-                    if (!(key in ZKM_transit_ticketCounts)) {
-                        ZKM_transit_ticketCounts[key] = 0;
-                        ZKM_transit_ticketPrices[key] = price;
-                    }
+            const subtext = subtexts[typeIndex] || "N/A";
+            const title = titles[typeIndex];
 
-                    // Attach event listeners to the "Add" and "Remove" buttons using IDs
-                    const addButton = buttons[typeIndex * 2];
-                    const removeButton = buttons[typeIndex * 2 + 1];
+            // Generate ticket key
+            const key = `${title} ${subtext} - ${typeName}`;
 
-                    addButton.id = `${typeId}-add-${typeIndex}`;
-                    removeButton.id = `${typeId}-remove-${typeIndex}`;
+            // Extract price from the type text
+            const priceMatch = typeName.match(/\d+,?\d*/);
+            const price = priceMatch ? parseFloat(priceMatch[0].replace(",", ".")) : 0;
 
-                    addButton.addEventListener("click", () => {
-                        if (addButton.disabled) {
-                            return; // Do nothing if the button is disabled
-                        }
-                        if (!ZKM_transit_ticketOrder.includes(key)) {
-                            ZKM_transit_ticketOrder.push(key); // Add to the order
-                        }
-                        ZKM_transit_ticketCounts[key]++;
-                        document.querySelectorAll(".button").forEach(button => {
-                            button.disabled = true; // Disable all buttons
-                            button.classList.add("disabled-button"); // Add opacity effect
-                        });
-                        removeButton.disabled = false; // Keep remove button for this ticket enabled
-                        removeButton.classList.remove("disabled-button");
-                        saveToLocalStorage();
-                        updateSummary();
-                    });
+            if (!(key in ZKM_transit_ticketCounts)) {
+                ZKM_transit_ticketCounts[key] = 0;
+                ZKM_transit_ticketPrices[key] = price;
+            }
 
-                    removeButton.addEventListener("click", () => {
-                        if (removeButton.disabled) {
-                            return; // Do nothing if the button is disabled
-                        }
-                        if (ZKM_transit_ticketCounts[key] > 0) {
-                            ZKM_transit_ticketCounts[key]--;
-                            if (ZKM_transit_ticketCounts[key] === 0) {
-                                ZKM_transit_ticketOrder = ZKM_transit_ticketOrder.filter(item => item !== key);
-                                    document.querySelectorAll(".button").forEach(button => {
-                                    button.disabled = false; // Enable all buttons
-                                    button.classList.remove("disabled-button"); // Remove opacity effect
-                                    
-                                });
-                                
-                            }
-                            saveToLocalStorage();
-                            updateSummary();
-                        }
-                    });
-                });
+            // Attach event listeners to buttons
+            const addButton = buttons[typeIndex * 2];
+            const removeButton = buttons[typeIndex * 2 + 1];
+
+            addButton.addEventListener("click", () => {
+                if (!ZKM_transit_ticketOrder.includes(key)) {
+                    ZKM_transit_ticketOrder.push(key);
+                }
+                ZKM_transit_ticketCounts[key]++;
+                saveToLocalStorage();
+                updateSummary();
             });
 
-            function saveToLocalStorage() {
-                localStorage.setItem('ZKM_transit_ticketCounts', JSON.stringify(ZKM_transit_ticketCounts));
-                localStorage.setItem('ZKM_transit_ticketPrices', JSON.stringify(ZKM_transit_ticketPrices));
-                localStorage.setItem('ZKM_transit_ticketOrder', JSON.stringify(ZKM_transit_ticketOrder));
-            }
-
-            function resetLocalStorage() {
-                localStorage.removeItem('ZKM_transit_ticketCounts');
-                localStorage.removeItem('ZKM_transit_ticketPrices');
-                localStorage.removeItem('ZKM_transit_ticketOrder');
-                ZKM_transit_ticketCounts = {};
-                ZKM_transit_ticketOrder = [];
-                updateSummary();
-                window.location.href='index.html';
-            }
-
-            function updateSummary() {
-                let totalPrice = 0;
-                let totalTickets = 0;
-                const details = ZKM_transit_ticketOrder
-                    .filter(key => ZKM_transit_ticketCounts[key] > 0)
-                    .map(key => {
-                        totalPrice += ZKM_transit_ticketPrices[key] * ZKM_transit_ticketCounts[key];
-                        totalTickets += ZKM_transit_ticketCounts[key];
-                        return `${key}: ${ZKM_transit_ticketCounts[key]}`;
-                    })
-                    .join("\n");
-
-                const summaryButtonsHTML = `
-                    <div class="summary-buttons">
-                        <button class="summary-button" id="cash-button" onclick="openCashPaymentModal()" ${totalTickets === 0 ? "disabled" : ""}>Buy with Cash</button>
-                        <button class="summary-button" id="card-button" onclick="openCardPaymentModal()" ${totalTickets === 0 ? "disabled" : ""}>Buy with Card</button>
-                    </div>
-                `;
-
-                const summaryHeader = `<span class="summary-header">Summary: ${totalPrice.toFixed(2)} PLN</span>`;
-                const summaryDetails = details ? `<div id="ticket-div">${details.replace(/\n/g, '<br>')}</div>` : '';
-
-                summary.innerHTML = `${summaryHeader}<br>${summaryDetails}<br>${summaryButtonsHTML}`;
-            }
-
-            // Initialize summary on page load
-            updateSummary();
-
-            document.querySelector(".nav-right .nav-button:last-child").addEventListener("click", resetLocalStorage);
+            removeButton.addEventListener("click", () => {
+                if (ZKM_transit_ticketCounts[key] > 0) {
+                    ZKM_transit_ticketCounts[key]--;
+                    if (ZKM_transit_ticketCounts[key] === 0) {
+                        ZKM_transit_ticketOrder = ZKM_transit_ticketOrder.filter((item) => item !== key);
+                    }
+                    saveToLocalStorage();
+                    updateSummary();
+                }
+            });
         });
+    });
+
+    function saveToLocalStorage() {
+        localStorage.setItem("ZKM_transit_ticketCounts", JSON.stringify(ZKM_transit_ticketCounts));
+        localStorage.setItem("ZKM_transit_ticketPrices", JSON.stringify(ZKM_transit_ticketPrices));
+        localStorage.setItem("ZKM_transit_ticketOrder", JSON.stringify(ZKM_transit_ticketOrder));
+    }
+
+    function updateSummary() {
+        let totalPrice = 0;
+        let totalTickets = 0;
+
+        const details = ZKM_transit_ticketOrder
+            .filter((key) => ZKM_transit_ticketCounts[key] > 0)
+            .map((key) => {
+                const count = ZKM_transit_ticketCounts[key];
+                const price = ZKM_transit_ticketPrices[key];
+
+                totalPrice += price * count;
+                totalTickets += count;
+
+                return `${key}: ${count}`;
+            })
+            .join("<br>");
+
+        summary.innerHTML = `
+            <span class="summary-header">Summary: ${totalPrice.toFixed(2)} PLN</span><br>
+            <div id="ticket-div">${details}</div>
+            <div class="summary-buttons">
+                <button class="summary-button" id="cash-button" onclick="openCashPaymentModal()" ${totalTickets === 0 ? "disabled" : ""}>Buy with Cash</button>
+                <button class="summary-button" id="card-button" onclick="openCardPaymentModal()" ${totalTickets === 0 ? "disabled" : ""}>Buy with Card</button>
+            </div>`;
+    }
+
+    // Initialize summary on page load
+    updateSummary();
+});
+
+
 
         document.addEventListener("DOMContentLoaded", () => {
             const addButtons = document.querySelectorAll(".add-button-id");
@@ -200,9 +170,9 @@
             // Automatically close the modal after 0.5 seconds
             setTimeout(() => {
                 modal.style.display = 'none';
-                localStorage.removeItem('metro_ticketCounts');
-                localStorage.removeItem('metro_ticketPrices');
-                localStorage.removeItem('metro_ticketOrder');
+                localStorage.removeItem('ZKM_transit_ticketCounts');
+                localStorage.removeItem('ZKM_transit_ticketPrices');
+                localStorage.removeItem('ZKM_transit_ticketOrder');
                 localStorage.removeItem('zkm_ticketCounts');
                 localStorage.removeItem('zkm_ticketPrices');
                 localStorage.removeItem('zkm_ticketOrder');
@@ -212,8 +182,8 @@
                 localStorage.removeItem('metro_transit_ticketCounts');
                 localStorage.removeItem('metro_transit_ticketPrices');
                 localStorage.removeItem('metro_transit_ticketOrder');
-                metro_ticketCounts = {};
-                metro_ticketOrder = [];
+                ZKM_transit_ticketCounts = {};
+                ZKM_transit_ticketOrder = [];
                 zkm_ticketCounts = {};
                 zkm_ticketOrder = [];
                 ZKM_transit_ticketCounts = {};
@@ -231,9 +201,9 @@
             // Automatically close the modal after 0.5 seconds
             setTimeout(() => {
                 modal.style.display = 'none';
-                localStorage.removeItem('metro_ticketCounts');
-                localStorage.removeItem('metro_ticketPrices');
-                localStorage.removeItem('metro_ticketOrder');
+                localStorage.removeItem('ZKM_transit_ticketCounts');
+                localStorage.removeItem('ZKM_transit_ticketPrices');
+                localStorage.removeItem('ZKM_transit_ticketOrder');
                 localStorage.removeItem('zkm_ticketCounts');
                 localStorage.removeItem('zkm_ticketPrices');
                 localStorage.removeItem('zkm_ticketOrder');
@@ -243,8 +213,8 @@
                 localStorage.removeItem('metro_transit_ticketCounts');
                 localStorage.removeItem('metro_transit_ticketPrices');
                 localStorage.removeItem('metro_transit_ticketOrder');
-                metro_ticketCounts = {};
-                metro_ticketOrder = [];
+                ZKM_transit_ticketCounts = {};
+                ZKM_transit_ticketOrder = [];
                 zkm_ticketCounts = {};
                 zkm_ticketOrder = [];
                 ZKM_transit_ticketCounts = {};
@@ -324,8 +294,6 @@
 
         });
 
-        
-
         function openInfoModal() {
             const infoModal = document.getElementById('info-modal');
             infoModal.style.display = 'flex';
@@ -337,14 +305,39 @@
         }
 
 
-
-
-
     </script>
     <style>
+        .site-info {
+            padding-bottom: 0px;
+        }
+
+        .content {
+            padding-bottom: 23px;
+        }
+        table {
+            text-align: center;
+        }
+
+        .row {
+            margin-top: 5px;
+            margin-right: 15px;
+        }
+        .row type {
+            padding-bottom: 20px;
+        }
+
+        th {
+            padding-bottom: 10px;
+        }
+
         .button {
-            height: 27px;
-            line-height: 20px;
+            width: 70px;
+            height: 70px;
+            line-height: 70px;
+        }
+        
+        th {
+            width: 181px
         }
 
     </style>
@@ -366,109 +359,91 @@
             </div>
             
         </nav>
-        <!-- <div class="site-info" style="text-align: center; font-size: 20px; padding-top: 10px; font-weight: bold;">
-            ZKM Gdynia Tickets: Transit Card
-        </div> -->
+        <div class="site-info">
+            ZKM Gdynia Tickets: Transit Card: Reduced Monthly Ticket
+        </div>
         <main class="content">
-            
-            <div class="column">
-                <div class="row title">Gdynia</div>
-                <div class="row subtext">Regular and Night Lines <br>&nbsp</div>
-                <div class="row type">Monthly Name Ticket 51,50 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div>
-                <!-- <div class="row type">Summer Semester Ticket 194,00 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div> -->
-                <div class="row type">Winter Semester Ticket 242,00 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div>
-            </div>
-            <div class="column">
-                <div class="row title">Gdynia</div>
-                <div class="row subtext">Regular, Express and Night Lines</div>
-                <div class="row type">Monthly Name Ticket 57,50 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div>
-                <!-- <div class="row type">Summer Semester Ticket 217,00 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div> -->
-                <div class="row type">Winter Semester Ticket 271,00 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div>
-            </div>
-            <div class="column">
-                <div class="row title">One Area<sup style="font-weight: normal; font-size: 15px;">1)</sup></div>
-                <div class="row subtext">Regular, Express and Night Lines</div>
-                <div class="row type">Monthly Name Ticket 40,50 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div>
-                <!-- <div class="row type">Summer Semester Ticket 152,00 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div> -->
-                <div class="row type">Winter Semester Ticket 190,00 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div>
-            </div>
-            <div class="column">
-                <div class="row title">All Areas<sup style="font-weight: normal; font-size: 15px;">2)</sup></div>
-                <div class="row subtext">Regular, Express and Night Lines</div>
-                <div class="row type">Monthly Name Ticket 54,00 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div>
-                <!-- <div class="row type">Summer Semester Ticket 205,00 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div> -->
-                <div class="row type">Winter Semester Ticket 257,00 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div>
-            </div>
-            <div class="column">
-                <div class="row title">Communication Network<sup style="font-weight: normal; font-size: 15px;">3)</sup></div>
-                <div class="row subtext">Regular, Express and Night Lines</div>
-                <div class="row type">Monthly Name Ticket 63,00 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div>
-                <!-- <div class="row type">Summer Semester Ticket 239,00 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div> -->
-                <div class="row type">Winter Semester Ticket 299,00 PLN</div>
-                <div class="row">
-                    <div class="button add-button-id">+</div>
-                    <div class="button">-</div>
-                </div>
-            </div>          
+
+
+            <div class="column">  
+                <table>
+                    <tr>
+                        <th colspan="2"><text class="row title">Gdynia</text></th>
+                        <th><text class="row title">One Area<sup>1)</sup></text></th>
+                        <th><text class="row title">All Areas<sup>2)</sup></text></th>
+                        <th><text class="row title">Communication Network<sup>3)</sup></text></th>
+                    </tr>
+                    <tr>
+                        <th><text class="row subtext">Regular and Night Lines</text></th>
+                        <th><text class="row subtext">Regular, Express and Night Lines</text></th>
+                        <th><text class="row subtext">Regular, Express and Night Lines</text></th>
+                        <th><text class="row subtext">Regular, Express and Night Lines</text></th>
+                        <th><text class="row subtext">Regular, Express and Night Lines</text></th>
+                        
+                    </tr>
+                    <!-- <tr>
+                        <td><div class="row type">Normal 156,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Gdansk+Sopot">+</div>
+                                <div class="button">-</div>
+                            </div>
+                            </td>
+                        <td><div class="row type">Normal 80,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Gdansk+Sopot">+</div>
+                                <div class="button">-</div>
+                            </div>
+                            </td>
+                        <td><div class="row type">Normal 80,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Sopot+Gdynia">+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                        <td><div class="row type">Normal 86,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="One provider network">+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                        <td><div class="row type">Normal 106,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="MZKZG area" >+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                    </tr> -->
+                    <tr>
+                        <td><div class="row type">Reduced 51,50 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Gdansk+Sopot" >+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                        <td><div class="row type">Reduced 57,50 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Gdansk+Sopot" >+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                        <td><div class="row type">Reduced 40,50 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Sopot+Gdynia" >+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                        <td><div class="row type">Reduced 54,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="One provider network" >+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                            <td>
+                                <div class="row type">Reduced 63,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="MZKZG area">+</div>
+                                <div class="button">-</div>
+                            </div>
+                            </td>
+                    </tr>
+                </table>
+            </div>               
         </main>
         <div class="footer-info" style="text-align: left; font-size: 10px; padding: 10px;">
-            1) Choose area from Sopot/Rumia/Kosakowo/Zukowo/Szemud/Wejherowo,   2) Includes all areas from 1),  3) Includes Lines N1 and 171)
+            (1) Choose area from Sopot/Rumia/Kosakowo/Zukowo/Szemud/Wejherowo,   (2) Includes all areas from (1),  (3) Includes Lines N1 and 171
         </div>
 
         <div class="summary">
@@ -513,7 +488,6 @@
                 <!-- <button class="close-modal" onclick="closeDateSelectionModal()">Cancel</button> -->
             </div>
         </div>
-        
 
         <div id="info-modal" class="help-modal">
             <div class="modal-content">

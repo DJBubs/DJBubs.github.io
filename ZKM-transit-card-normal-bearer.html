@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Machine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="common.css">
+    <script>
+        let currentLanguage = 'en'; // Default language session variable
+        let isSelectionModalOpen = false; // Flag to track modal state
+
+        function updateTime() {
+            const now = new Date();
+            const dateString = now.toLocaleDateString();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('date-time').textContent = `${dateString} ${timeString}`;
+        }
+
+        setInterval(updateTime, 1000);
+        document.addEventListener("DOMContentLoaded", updateTime);
+
+        function openHelpModal() {
+            document.getElementById('help-modal').style.display = 'flex';
+        }
+
+        function closeHelpModal() {
+            document.getElementById('help-modal').style.display = 'none';
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const summary = document.querySelector(".summary");
+            const rows = document.querySelectorAll(".column");
+            let ZKM_transit_ticketCounts = JSON.parse(localStorage.getItem("ZKM_transit_ticketCounts")) || {};
+            const ZKM_transit_ticketPrices = JSON.parse(localStorage.getItem("ZKM_transit_ticketPrices")) || {};
+            let ZKM_transit_ticketOrder = JSON.parse(localStorage.getItem("ZKM_transit_ticketOrder")) || [];
+
+            rows.forEach((column) => {
+                const types = column.querySelectorAll(".row.type");
+                const buttons = column.querySelectorAll(".button");
+
+                types.forEach((type, typeIndex) => {
+                    const typeName = type.textContent.trim(); // Full row type text (e.g., "Reduced 78,00 PLN")
+                    const priceMatch = typeName.match(/\d+,?\d*/);
+                    const price = priceMatch ? parseFloat(priceMatch[0].replace(",", ".")) : 0;
+
+                    const addButton = buttons[typeIndex * 2];
+                    const removeButton = buttons[typeIndex * 2 + 1];
+                    const key = `${addButton.id} - ${typeName}`; // Combine button ID with full row type text
+
+                    if (!(key in ZKM_transit_ticketCounts)) {
+                        ZKM_transit_ticketCounts[key] = 0;
+                        ZKM_transit_ticketPrices[key] = price;
+                    }
+
+                    addButton.addEventListener("click", () => {
+                        if (addButton.disabled) return;
+
+                        if (!ZKM_transit_ticketOrder.includes(key)) {
+                            ZKM_transit_ticketOrder.push(key);
+                        }
+
+                        ZKM_transit_ticketCounts[key]++;
+
+                        document.querySelectorAll(".button").forEach((button) => {
+                            button.disabled = true;
+                            button.classList.add("disabled-button");
+                        });
+
+                        removeButton.disabled = false;
+                        removeButton.classList.remove("disabled-button");
+
+                        saveToLocalStorage();
+                        updateSummary();
+                    });
+
+                    removeButton.addEventListener("click", () => {
+                        if (removeButton.disabled) return;
+
+                        if (ZKM_transit_ticketCounts[key] > 0) {
+                            ZKM_transit_ticketCounts[key]--;
+
+                            if (ZKM_transit_ticketCounts[key] === 0) {
+                                ZKM_transit_ticketOrder = ZKM_transit_ticketOrder.filter(
+                                    (item) => item !== key
+                                );
+
+                                document.querySelectorAll(".button").forEach((button) => {
+                                    button.disabled = false;
+                                    button.classList.remove("disabled-button");
+                                });
+                            }
+
+                            saveToLocalStorage();
+                            updateSummary();
+                        }
+                    });
+                });
+            });
+
+            function saveToLocalStorage() {
+                localStorage.setItem("ZKM_transit_ticketCounts", JSON.stringify(ZKM_transit_ticketCounts));
+                localStorage.setItem("ZKM_transit_ticketPrices", JSON.stringify(ZKM_transit_ticketPrices));
+                localStorage.setItem("ZKM_transit_ticketOrder", JSON.stringify(ZKM_transit_ticketOrder));
+            }
+
+            function resetLocalStorage() {
+                
+                localStorage.removeItem('ZKM_transit_ticketCounts');
+                localStorage.removeItem('ZKM_transit_ticketPrices');
+                localStorage.removeItem('ZKM_transit_ticketOrder');
+                ZKM_transit_ticketCounts = {};
+                ZKM_transit_ticketOrder = [];
+                updateSummary();
+                window.location.href = 'index.html';
+            }
+
+            function updateSummary() {
+                let totalPrice = 0;
+                let totalTickets = 0;
+
+                const details = ZKM_transit_ticketOrder
+                    .filter((key) => ZKM_transit_ticketCounts[key] > 0)
+                    .map((key) => {
+                        const count = ZKM_transit_ticketCounts[key];
+                        const price = ZKM_transit_ticketPrices[key];
+
+                        totalPrice += price * count;
+                        totalTickets += count;
+
+                        return `${key}: ${count}`;
+                    })
+                    .join("<br>");
+
+                const summaryButtonsHTML = `
+                    <div class="summary-buttons">
+                        <button class="summary-button" id="cash-button" onclick="openCashPaymentModal()" ${totalTickets === 0 ? "disabled" : ""}>Buy with Cash</button>
+                        <button class="summary-button" id="card-button" onclick="openCardPaymentModal()" ${totalTickets === 0 ? "disabled" : ""}>Buy with Card</button>
+                    </div>
+                `;
+
+                const summaryHeader = `<span class="summary-header">Summary: ${totalPrice.toFixed(2)} PLN</span>`;
+                const summaryDetails = details ? `<div id="ticket-div">${details}</div>` : "";
+
+                summary.innerHTML = `${summaryHeader}<br>${summaryDetails}<br>${summaryButtonsHTML}`;
+            }
+
+            updateSummary();
+
+            const cancelButton = document.querySelector(".nav-right .nav-button:last-child");
+            if (cancelButton) {
+                cancelButton.addEventListener("click", resetLocalStorage);
+            }
+        });
+
+
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const addButtons = document.querySelectorAll(".add-button-id");
+
+            // Function to check if all add buttons are enabled
+            function checkAddButtonsState() {
+                let allEnabled = true;
+
+                addButtons.forEach(button => {
+                    if (button.disabled) {
+                        allEnabled = false;
+                        //console.log(`Button with ID "${button.id}" is disabled.`);
+                    } else {
+                        isSelectionModalOpen = false;
+                        return;
+                        console.log(`Button with ID "${button.id}" is enabled.`);
+                    }
+                });
+
+            }
+
+            // Call the function once to check the initial state
+            checkAddButtonsState();
+
+            // Add a MutationObserver to monitor changes in the `disabled` attribute
+            addButtons.forEach(button => {
+                const observer = new MutationObserver(() => {
+                    checkAddButtonsState(); // Recheck the state whenever any button changes
+                });
+
+                observer.observe(button, { attributes: true }); // Observe attribute changes only
+            });
+        });
+
+
+        
+
+        function openCardPaymentModal() {
+            const modal = document.getElementById('card-payment-modal');
+            modal.style.display = 'flex';
+
+            // Automatically close the modal after 0.5 seconds
+            setTimeout(() => {
+                modal.style.display = 'none';
+                localStorage.removeItem('ZKM_transit_ticketCounts');
+                localStorage.removeItem('ZKM_transit_ticketPrices');
+                localStorage.removeItem('ZKM_transit_ticketOrder');
+                localStorage.removeItem('zkm_ticketCounts');
+                localStorage.removeItem('zkm_ticketPrices');
+                localStorage.removeItem('zkm_ticketOrder');
+                localStorage.removeItem('ZKM_transit_ticketCounts');
+                localStorage.removeItem('ZKM_transit_ticketPrices');
+                localStorage.removeItem('ZKM_transit_ticketOrder');
+                localStorage.removeItem('metro_transit_ticketCounts');
+                localStorage.removeItem('metro_transit_ticketPrices');
+                localStorage.removeItem('metro_transit_ticketOrder');
+                ZKM_transit_ticketCounts = {};
+                ZKM_transit_ticketOrder = [];
+                zkm_ticketCounts = {};
+                zkm_ticketOrder = [];
+                ZKM_transit_ticketCounts = {};
+                ZKM_transit_ticketOrder = [];
+                metro_transit_ticketCounts = {};
+                metro_transit_ticketOrder = [];
+                window.location.href = 'zaplacone-karta.html';
+            }, 3000);
+        }
+
+        function openCashPaymentModal() {
+            const modal = document.getElementById('cash-payment-modal');
+            modal.style.display = 'flex';
+
+            // Automatically close the modal after 0.5 seconds
+            setTimeout(() => {
+                modal.style.display = 'none';
+                localStorage.removeItem('ZKM_transit_ticketCounts');
+                localStorage.removeItem('ZKM_transit_ticketPrices');
+                localStorage.removeItem('ZKM_transit_ticketOrder');
+                localStorage.removeItem('zkm_ticketCounts');
+                localStorage.removeItem('zkm_ticketPrices');
+                localStorage.removeItem('zkm_ticketOrder');
+                localStorage.removeItem('ZKM_transit_ticketCounts');
+                localStorage.removeItem('ZKM_transit_ticketPrices');
+                localStorage.removeItem('ZKM_transit_ticketOrder');
+                localStorage.removeItem('metro_transit_ticketCounts');
+                localStorage.removeItem('metro_transit_ticketPrices');
+                localStorage.removeItem('metro_transit_ticketOrder');
+                ZKM_transit_ticketCounts = {};
+                ZKM_transit_ticketOrder = [];
+                zkm_ticketCounts = {};
+                zkm_ticketOrder = [];
+                ZKM_transit_ticketCounts = {};
+                ZKM_transit_ticketOrder = [];
+                metro_transit_ticketCounts = {};
+                metro_transit_ticketOrder = [];
+                window.location.href = 'zaplacone-gotowka.html';
+            }, 3000);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const dateInput = document.getElementById("start-date");
+            const currentDate = new Date();
+            const formattedDate = currentDate.toISOString().split("T")[0]; // Get YYYY-MM-DD format
+
+            // document.querySelectorAll(".button").forEach(button => {
+            //     button.addEventListener("click", openDateSelectionModal);
+            // });
+
+            document.querySelectorAll(".add-button-id").forEach(button => {
+                button.addEventListener("click", openDateSelectionModal);
+            });
+            
+
+            function openDateSelectionModal() {
+                // Calculate the total number of tickets in the summary
+                if (isSelectionModalOpen) {
+                    openInfoModal();
+                    return; // Prevent multiple openings
+                }
+                isSelectionModalOpen = true; // Set flag to true
+
+                dateInput.value = formattedDate;
+                dateInput.min = formattedDate;
+                
+                document.getElementById('date-selection-modal').style.display = 'flex';
+            }
+            function resetModalFlagAndReturn() {
+                isSelectionModalOpen = false; // Reset the flag
+                //window.location.href = 'index.html'; // Redirect to return
+            }
+            function closeDateSelectionModal() {
+                document.getElementById('date-selection-modal').style.display = 'none';
+            }
+
+
+            function confirmDateSelection() {
+                const selectedDate = new Date(dateInput.value);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Reset time for comparison
+
+                // Check if the selected date is valid
+                if (selectedDate < today) {
+                    // Show error if the selected date is in the past
+                    const infoModal = document.getElementById("info-modal");
+                    const infoContent = infoModal.querySelector(".modal-content p");
+                    infoContent.textContent = "You cannot select a date in the past. Please choose today or a future date.";
+                    infoModal.style.display = "flex";
+                    return;
+                }
+
+                console.log("Selected Date:", selectedDate);
+                console.log("Today's Date:", today);
+
+                // Add the selected date to the summary
+                const summary = document.querySelector(".summary");
+                const formattedSelectedDate = selectedDate.toLocaleDateString();
+                const newSummaryDetail = `<br>Validity Start Date: ${formattedSelectedDate}`;
+                summary.innerHTML += newSummaryDetail;
+
+                closeDateSelectionModal();
+            };
+
+
+            window.closeDateSelectionModal = closeDateSelectionModal;
+            window.confirmDateSelection = confirmDateSelection;
+
+        });
+
+        function openInfoModal() {
+            const infoModal = document.getElementById('info-modal');
+            infoModal.style.display = 'flex';
+        }
+
+        function closeInfoModal() {
+            const infoModal = document.getElementById('info-modal');
+            infoModal.style.display = 'none';
+        }
+
+
+    </script>
+    <style>
+        .site-info {
+            padding-bottom: 0px;
+        }
+
+        .content {
+            padding-bottom: 23px;
+        }
+        table {
+            text-align: center;
+        }
+
+        .row {
+            margin-top: 5px;
+            margin-right: 15px;
+        }
+        .row type {
+            padding-bottom: 20px;
+        }
+
+        th {
+            padding-bottom: 10px;
+        }
+
+        .button {
+            width: 70px;
+            height: 70px;
+            line-height: 70px;
+        }
+        
+        th {
+            width: 181px
+        }
+
+        .nav-center {
+            display: block;
+            justify-content: left;
+            margin-left: 50px;
+        }
+
+        sup {
+            font-weight: normal; 
+            font-size: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-left">
+                <img src="logo-zkm.svg" alt="ZKM Logo" class="logo">
+                <img src="logo-gdynia.svg" alt="Gdynia Logo" class="logo">
+            </div>
+            <div class="nav-center">
+                <span id="date-time"></span>
+            </div>
+            <div class="nav-right">
+                <button class="nav-button" style="height: 66px; width: 120px;" onclick="openHelpModal()">Help</button>
+                <!-- <button class="nav-button" style="height: 66px; width: 120px;" onclick="window.location.href='index.html'">Return</button> -->
+                <button class="nav-button" style="height: 66px; width: 120px;" onclick="resetLocalStorage(); window.location.href='index.html'">Cancel</button>
+            </div>
+            
+        </nav>
+        <div class="site-info">
+            ZKM Gdynia Tickets: Transit Card: Normal Monthly Bearer's Ticket
+        </div>
+        <main class="content">
+
+
+            <div class="column">  
+                <table>
+                    <tr>
+                        <th colspan="2"><text class="row title">Gdynia</text></th>
+                        <th><text class="row title">One Area<sup>1)</sup></text></th>
+                        <th><text class="row title">All Areas<sup style="font-weight: normal;">2)</sup></text></th>
+                        <th><text class="row title">Communication Network<sup style="font-weight: normal;">3)</sup></text></th>
+                    </tr>
+                    <tr>
+                        <th><text class="row subtext">Regular and Night Lines</text></th>
+                        <th><text class="row subtext">Regular, Express and Night Lines</text></th>
+                        <th><text class="row subtext">Regular, Express and Night Lines</text></th>
+                        <th><text class="row subtext">Regular, Express and Night Lines</text></th>
+                        <th><text class="row subtext">Regular, Express and Night Lines</text></th>
+                        
+                    </tr>
+                    <tr>
+                        <td><div class="row type">Normal 122,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Gdynia - Regular and Night Lines">+</div>
+                                <div class="button">-</div>
+                            </div>
+                            </td>
+                        <td><div class="row type">Normal 136,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Gdynia - Regular, Express and Night Lines">+</div>
+                                <div class="button">-</div>
+                            </div>
+                            </td>
+                        <td><div class="row type">Normal 96,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="One Area - Regular, Express and Night Lines" >+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                        <td><div class="row type">Normal 128,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="All Areas - Regular, Express and Night Lines">+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                        <td><div class="row type">Normal 142,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Communication Network - Regular, Express and Night Lines" >+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                    </tr>
+                    <!-- <tr>
+                        <td><div class="row type">Reduced 51,50 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Gdynia - Regular and Night Lines" >+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                        <td><div class="row type">Reduced 57,50 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Gdynia - Regular, Express and Night Lines"  >+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                        <td><div class="row type">Reduced 40,50 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="One Area - Regular, Express and Night Lines" >+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                        <td><div class="row type">Reduced 54,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="All Areas - Regular, Express and Night Lines" >+</div>
+                                <div class="button">-</div>
+                            </div></td>
+                            <td>
+                                <div class="row type">Reduced 63,00 PLN</div>
+                            <div class="row">
+                                <div class="button add-button-id" id="Communication Network - Regular, Express and Night Lines">+</div>
+                                <div class="button">-</div>
+                            </div>
+                            </td>
+                    </tr> -->
+                </table>
+            </div>               
+        </main>
+        <div class="footer-info" style="text-align: left; font-size: 10px; padding: 10px;">
+            (1) Choose area from Sopot/Rumia/Kosakowo/Zukowo/Szemud/Wejherowo,   (2) Includes all areas from (1),  (3) Includes Lines N1 and 171
+        </div>
+
+        <div class="summary">
+            Summary: 0,00 PLN
+            <div class="summary-buttons">
+                <button class="summary-button" onclick="openCashPaymentModal()" disabled>Buy with Cash</button>
+                <button class="summary-button" onclick="openCardPaymentModal()" disabled>Buy with Card</button>
+            </div>
+        </div>
+
+        <div id="help-modal" class="help-modal">
+            <div class="modal-content">
+                <h2>Help</h2>
+                <p>If you need assistance, please contact support or refer to the instructions provided on the screen.</p>
+                <button class="close-modal" onclick="closeHelpModal()">Close</button>
+            </div>
+        </div>
+
+        <div id="cash-payment-modal" class="help-modal">
+            <div class="modal-content">
+                <p>Waiting for payment...</p>
+                <p>Insert cash on the right</p>
+                <!-- <button class="close-modal" onclick="closeCashPaymentModal()">Close</button> -->
+            </div>
+        </div>
+
+        <div id="card-payment-modal" class="help-modal">
+            <div class="modal-content">
+                <p>Waiting for payment...</p>
+                <p>Follow instructions on the terminal</p>
+                <!-- <button class="close-modal" onclick="closeCardPaymentModal()">Close</button> -->
+            </div>
+        </div>
+
+        <div id="date-selection-modal" class="help-modal">
+            <div class="modal-content">
+                <h2>Select Validity Start Date</h2>
+                <label for="start-date">Select Date:</label>
+                <input type="date" id="start-date" class="date-input">
+                <br><br>
+                <button class="confirm-button" onclick="confirmDateSelection()">Confirm</button>
+                <!-- <button class="close-modal" onclick="closeDateSelectionModal()">Cancel</button> -->
+            </div>
+        </div>
+
+        <div id="info-modal" class="help-modal">
+            <div class="modal-content">
+                <h2>Notice</h2>
+                <p>Only one ticket can be purchased at a time. Please complete or cancel your current selection.</p>
+                <button class="close-modal" onclick="closeInfoModal()">Close</button>
+            </div>
+        </div>
+        
+        
+
+        
+    </div>
+</body>
+</html>

@@ -36,48 +36,32 @@
             let metro_transit_ticketOrder = JSON.parse(localStorage.getItem("metro_transit_ticketOrder")) || [];
 
             rows.forEach((column) => {
-                const titleElement = column.querySelector(".row.title");
-                const subtextElements = column.querySelectorAll(".row.subtext");
                 const types = column.querySelectorAll(".row.type");
                 const buttons = column.querySelectorAll(".button");
 
                 types.forEach((type, typeIndex) => {
-                    const typeName = type.textContent.trim();
-                    const typeId = typeName.includes("Normal") ? "normal" : "reduced";
-
-                    // Handle subtext, use "N/A" if blank
-                    const subtext = subtextElements[typeIndex]?.textContent.trim() || "";
-                    const title = titleElement.textContent.trim();
-
-                    // Generate the ticket key for the summary
-                    const key = `${title} ${subtext} - ${typeName}`;
-
-                    // Extract the price from the ticket type
+                    const typeName = type.textContent.trim(); // Full row type text (e.g., "Reduced 78,00 PLN")
                     const priceMatch = typeName.match(/\d+,?\d*/);
                     const price = priceMatch ? parseFloat(priceMatch[0].replace(",", ".")) : 0;
+
+                    const addButton = buttons[typeIndex * 2];
+                    const removeButton = buttons[typeIndex * 2 + 1];
+                    const key = `${addButton.id} - ${typeName}`; // Combine button ID with full row type text
 
                     if (!(key in metro_transit_ticketCounts)) {
                         metro_transit_ticketCounts[key] = 0;
                         metro_transit_ticketPrices[key] = price;
                     }
 
-                    // Attach event listeners to the "Add" and "Remove" buttons
-                    const addButton = buttons[typeIndex * 2];
-                    const removeButton = buttons[typeIndex * 2 + 1];
-
-                    addButton.id = `${typeId}-add-${typeIndex}`;
-                    removeButton.id = `${typeId}-remove-${typeIndex}`;
-
                     addButton.addEventListener("click", () => {
-                        if (addButton.disabled) return; // Do nothing if the button is disabled
+                        if (addButton.disabled) return;
 
                         if (!metro_transit_ticketOrder.includes(key)) {
-                            metro_transit_ticketOrder.push(key); // Add to the order
+                            metro_transit_ticketOrder.push(key);
                         }
 
                         metro_transit_ticketCounts[key]++;
 
-                        // Update button states
                         document.querySelectorAll(".button").forEach((button) => {
                             button.disabled = true;
                             button.classList.add("disabled-button");
@@ -91,7 +75,7 @@
                     });
 
                     removeButton.addEventListener("click", () => {
-                        if (removeButton.disabled) return; // Do nothing if the button is disabled
+                        if (removeButton.disabled) return;
 
                         if (metro_transit_ticketCounts[key] > 0) {
                             metro_transit_ticketCounts[key]--;
@@ -161,7 +145,6 @@
                 summary.innerHTML = `${summaryHeader}<br>${summaryDetails}<br>${summaryButtonsHTML}`;
             }
 
-            // Initialize summary on page load
             updateSummary();
 
             const cancelButton = document.querySelector(".nav-right .nav-button:last-child");
@@ -170,35 +153,38 @@
             }
         });
 
-
         document.addEventListener("DOMContentLoaded", () => {
             const addButtons = document.querySelectorAll(".add-button-id");
 
-            // Function to check the state of add buttons
+            // Function to check if all add buttons are enabled
             function checkAddButtonsState() {
+                let allEnabled = true;
+
                 addButtons.forEach(button => {
-                    if (!button.disabled) {
-                        isSelectionModalOpen = false
-                        // You can perform additional actions here
+                    if (button.disabled) {
+                        allEnabled = false;
+                        //console.log(`Button with ID "${button.id}" is disabled.`);
                     } else {
-                        console.log(`Button with ID ${button.id} is disabled.`);
+                        isSelectionModalOpen = false;
+                        return;
+                        console.log(`Button with ID "${button.id}" is enabled.`);
                     }
                 });
+
             }
 
-            // Periodically check the state of add buttons
-            setInterval(checkAddButtonsState, 1000);
+            // Call the function once to check the initial state
+            checkAddButtonsState();
 
-            // Example of adding an observer when button state changes
+            // Add a MutationObserver to monitor changes in the `disabled` attribute
             addButtons.forEach(button => {
-                button.addEventListener("click", () => {
-                    console.log(`Button ${button.id} clicked. Current state: ${!button.disabled ? "enabled" : "disabled"}`);
+                const observer = new MutationObserver(() => {
+                    checkAddButtonsState(); // Recheck the state whenever any button changes
                 });
+
+                observer.observe(button, { attributes: true }); // Observe attribute changes only
             });
         });
-
-
-        
 
         function openCardPaymentModal() {
             const modal = document.getElementById('card-payment-modal');
@@ -375,6 +361,11 @@
             line-height: 70px;
         }
 
+        .nav-center {
+            display: block;
+            justify-content: left;
+            margin-left: 50px;
+        }
     </style>
 </head>
 <body>
@@ -389,7 +380,7 @@
             </div>
             <div class="nav-right">
                 <button class="nav-button" style="height: 66px; width: 120px;" onclick="openHelpModal()">Help</button>
-                <button class="nav-button" style="height: 66px; width: 120px;" onclick="window.location.href='index.html'">Return</button>
+                <!-- <button class="nav-button" style="height: 66px; width: 120px;" onclick="window.location.href='index.html'">Return</button> -->
                 <button class="nav-button" style="height: 66px; width: 120px;" onclick="resetLocalStorage(); window.location.href='index.html'">Cancel</button>
             </div>
             
@@ -445,28 +436,28 @@
                     <tr>
                         <td><div class="row type">Reduced 78,00 PLN</div>
                             <div class="row">
-                                <div class="button add-button-id" id="Gdansk+Sopot" >+</div>
+                                <div class="button add-button-id" id="Municipal ticket" >+</div>
                                 <div class="button">-</div>
                             </div></td>
                         <td><div class="row type">Reduced 40,00 PLN</div>
                             <div class="row">
-                                <div class="button add-button-id" id="Gdansk+Sopot" >+</div>
+                                <div class="button add-button-id" id="Municipal ticket combined with other providers - Gdansk+Sopot" >+</div>
                                 <div class="button">-</div>
                             </div></td>
                         <td><div class="row type">Reduced 40,00 PLN</div>
                             <div class="row">
-                                <div class="button add-button-id" id="Sopot+Gdynia" >+</div>
+                                <div class="button add-button-id" id="Municipal ticket combined with other providers - Sopot+Gdynia" >+</div>
                                 <div class="button">-</div>
                             </div></td>
                         <td><div class="row type">Reduced 43,00 PLN</div>
                             <div class="row">
-                                <div class="button add-button-id" id="One provider network" >+</div>
+                                <div class="button add-button-id" id="Municipal ticket combined with other providers - One provider network" >+</div>
                                 <div class="button">-</div>
                             </div></td>
                             <td>
                                 <div class="row type">Reduced 53,00 PLN</div>
                             <div class="row">
-                                <div class="button add-button-id" id="MZKZG area">+</div>
+                                <div class="button add-button-id" id="Municipal ticket combined with other providers - MZKZG area">+</div>
                                 <div class="button">-</div>
                             </div>
                             </td>

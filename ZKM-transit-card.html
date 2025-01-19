@@ -29,134 +29,162 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-    const summary = document.querySelector(".summary");
-    const table = document.querySelector("table");
-    const rows = table.querySelectorAll("tr");
-    let ZKM_transit_ticketCounts = JSON.parse(localStorage.getItem("ZKM_transit_ticketCounts")) || {};
-    const ZKM_transit_ticketPrices = JSON.parse(localStorage.getItem("ZKM_transit_ticketPrices")) || {};
-    let ZKM_transit_ticketOrder = JSON.parse(localStorage.getItem("ZKM_transit_ticketOrder")) || [];
+            const summary = document.querySelector(".summary");
+            const rows = document.querySelectorAll(".column");
+            let ZKM_transit_ticketCounts = JSON.parse(localStorage.getItem("ZKM_transit_ticketCounts")) || {};
+            const ZKM_transit_ticketPrices = JSON.parse(localStorage.getItem("ZKM_transit_ticketPrices")) || {};
+            let ZKM_transit_ticketOrder = JSON.parse(localStorage.getItem("ZKM_transit_ticketOrder")) || [];
 
-    // Extract titles from the first row
-    const titleElements = rows[0].querySelectorAll("th .row.title");
-    const titles = Array.from(titleElements).map((el) => el.textContent.trim());
+            rows.forEach((column) => {
+                const types = column.querySelectorAll(".row.type");
+                const buttons = column.querySelectorAll(".button");
 
-    // Extract subtexts from the second row
-    const subtextElements = rows[1].querySelectorAll("th .row.subtext");
-    const subtexts = Array.from(subtextElements).map((el) => el.textContent.trim());
+                types.forEach((type, typeIndex) => {
+                    const typeName = type.textContent.trim(); // Full row type text (e.g., "Reduced 78,00 PLN")
+                    const priceMatch = typeName.match(/\d+,?\d*/);
+                    const price = priceMatch ? parseFloat(priceMatch[0].replace(",", ".")) : 0;
 
-    // Process ticket types and attach event listeners
-    rows.forEach((row, rowIndex) => {
-        if (rowIndex <= 1) return; // Skip title and subtext rows
+                    const addButton = buttons[typeIndex * 2];
+                    const removeButton = buttons[typeIndex * 2 + 1];
+                    const key = `${addButton.id} - ${typeName}`; // Combine button ID with full row type text
 
-        const typeElements = row.querySelectorAll(".row.type");
-        const buttons = row.querySelectorAll(".button");
+                    if (!(key in ZKM_transit_ticketCounts)) {
+                        ZKM_transit_ticketCounts[key] = 0;
+                        ZKM_transit_ticketPrices[key] = price;
+                    }
 
-        typeElements.forEach((typeElement, typeIndex) => {
-            const typeName = typeElement.textContent.trim();
-            const typeId = typeName.includes("Normal") ? "normal" : "reduced";
+                    addButton.addEventListener("click", () => {
+                        if (addButton.disabled) return;
 
-            const subtext = subtexts[typeIndex] || "N/A";
-            const title = titles[typeIndex];
+                        if (!ZKM_transit_ticketOrder.includes(key)) {
+                            ZKM_transit_ticketOrder.push(key);
+                        }
 
-            // Generate ticket key
-            const key = `${title} ${subtext} - ${typeName}`;
+                        ZKM_transit_ticketCounts[key]++;
 
-            // Extract price from the type text
-            const priceMatch = typeName.match(/\d+,?\d*/);
-            const price = priceMatch ? parseFloat(priceMatch[0].replace(",", ".")) : 0;
+                        document.querySelectorAll(".button").forEach((button) => {
+                            button.disabled = true;
+                            button.classList.add("disabled-button");
+                        });
 
-            if (!(key in ZKM_transit_ticketCounts)) {
-                ZKM_transit_ticketCounts[key] = 0;
-                ZKM_transit_ticketPrices[key] = price;
+                        removeButton.disabled = false;
+                        removeButton.classList.remove("disabled-button");
+
+                        saveToLocalStorage();
+                        updateSummary();
+                    });
+
+                    removeButton.addEventListener("click", () => {
+                        if (removeButton.disabled) return;
+
+                        if (ZKM_transit_ticketCounts[key] > 0) {
+                            ZKM_transit_ticketCounts[key]--;
+
+                            if (ZKM_transit_ticketCounts[key] === 0) {
+                                ZKM_transit_ticketOrder = ZKM_transit_ticketOrder.filter(
+                                    (item) => item !== key
+                                );
+
+                                document.querySelectorAll(".button").forEach((button) => {
+                                    button.disabled = false;
+                                    button.classList.remove("disabled-button");
+                                });
+                            }
+
+                            saveToLocalStorage();
+                            updateSummary();
+                        }
+                    });
+                });
+            });
+
+            function saveToLocalStorage() {
+                localStorage.setItem("ZKM_transit_ticketCounts", JSON.stringify(ZKM_transit_ticketCounts));
+                localStorage.setItem("ZKM_transit_ticketPrices", JSON.stringify(ZKM_transit_ticketPrices));
+                localStorage.setItem("ZKM_transit_ticketOrder", JSON.stringify(ZKM_transit_ticketOrder));
             }
 
-            // Attach event listeners to buttons
-            const addButton = buttons[typeIndex * 2];
-            const removeButton = buttons[typeIndex * 2 + 1];
-
-            addButton.addEventListener("click", () => {
-                if (!ZKM_transit_ticketOrder.includes(key)) {
-                    ZKM_transit_ticketOrder.push(key);
-                }
-                ZKM_transit_ticketCounts[key]++;
-                saveToLocalStorage();
+            function resetLocalStorage() {
+                
+                localStorage.removeItem('ZKM_transit_ticketCounts');
+                localStorage.removeItem('ZKM_transit_ticketPrices');
+                localStorage.removeItem('ZKM_transit_ticketOrder');
+                ZKM_transit_ticketCounts = {};
+                ZKM_transit_ticketOrder = [];
                 updateSummary();
-            });
+                window.location.href = 'index.html';
+            }
 
-            removeButton.addEventListener("click", () => {
-                if (ZKM_transit_ticketCounts[key] > 0) {
-                    ZKM_transit_ticketCounts[key]--;
-                    if (ZKM_transit_ticketCounts[key] === 0) {
-                        ZKM_transit_ticketOrder = ZKM_transit_ticketOrder.filter((item) => item !== key);
-                    }
-                    saveToLocalStorage();
-                    updateSummary();
-                }
-            });
+            function updateSummary() {
+                let totalPrice = 0;
+                let totalTickets = 0;
+
+                const details = ZKM_transit_ticketOrder
+                    .filter((key) => ZKM_transit_ticketCounts[key] > 0)
+                    .map((key) => {
+                        const count = ZKM_transit_ticketCounts[key];
+                        const price = ZKM_transit_ticketPrices[key];
+
+                        totalPrice += price * count;
+                        totalTickets += count;
+
+                        return `${key}: ${count}`;
+                    })
+                    .join("<br>");
+
+                const summaryButtonsHTML = `
+                    <div class="summary-buttons">
+                        <button class="summary-button" id="cash-button" onclick="openCashPaymentModal()" ${totalTickets === 0 ? "disabled" : ""}>Buy with Cash</button>
+                        <button class="summary-button" id="card-button" onclick="openCardPaymentModal()" ${totalTickets === 0 ? "disabled" : ""}>Buy with Card</button>
+                    </div>
+                `;
+
+                const summaryHeader = `<span class="summary-header">Summary: ${totalPrice.toFixed(2)} PLN</span>`;
+                const summaryDetails = details ? `<div id="ticket-div">${details}</div>` : "";
+
+                summary.innerHTML = `${summaryHeader}<br>${summaryDetails}<br>${summaryButtonsHTML}`;
+            }
+
+            updateSummary();
+
+            const cancelButton = document.querySelector(".nav-right .nav-button:last-child");
+            if (cancelButton) {
+                cancelButton.addEventListener("click", resetLocalStorage);
+            }
         });
-    });
-
-    function saveToLocalStorage() {
-        localStorage.setItem("ZKM_transit_ticketCounts", JSON.stringify(ZKM_transit_ticketCounts));
-        localStorage.setItem("ZKM_transit_ticketPrices", JSON.stringify(ZKM_transit_ticketPrices));
-        localStorage.setItem("ZKM_transit_ticketOrder", JSON.stringify(ZKM_transit_ticketOrder));
-    }
-
-    function updateSummary() {
-        let totalPrice = 0;
-        let totalTickets = 0;
-
-        const details = ZKM_transit_ticketOrder
-            .filter((key) => ZKM_transit_ticketCounts[key] > 0)
-            .map((key) => {
-                const count = ZKM_transit_ticketCounts[key];
-                const price = ZKM_transit_ticketPrices[key];
-
-                totalPrice += price * count;
-                totalTickets += count;
-
-                return `${key}: ${count}`;
-            })
-            .join("<br>");
-
-        summary.innerHTML = `
-            <span class="summary-header">Summary: ${totalPrice.toFixed(2)} PLN</span><br>
-            <div id="ticket-div">${details}</div>
-            <div class="summary-buttons">
-                <button class="summary-button" id="cash-button" onclick="openCashPaymentModal()" ${totalTickets === 0 ? "disabled" : ""}>Buy with Cash</button>
-                <button class="summary-button" id="card-button" onclick="openCardPaymentModal()" ${totalTickets === 0 ? "disabled" : ""}>Buy with Card</button>
-            </div>`;
-    }
-
-    // Initialize summary on page load
-    updateSummary();
-});
 
 
 
         document.addEventListener("DOMContentLoaded", () => {
             const addButtons = document.querySelectorAll(".add-button-id");
 
-            // Function to check the state of add buttons
+            // Function to check if all add buttons are enabled
             function checkAddButtonsState() {
+                let allEnabled = true;
+
                 addButtons.forEach(button => {
-                    if (!button.disabled) {
-                        isSelectionModalOpen = false
-                        // You can perform additional actions here
+                    if (button.disabled) {
+                        allEnabled = false;
+                        //console.log(`Button with ID "${button.id}" is disabled.`);
                     } else {
-                        console.log(`Button with ID ${button.id} is disabled.`);
+                        isSelectionModalOpen = false;
+                        return;
+                        console.log(`Button with ID "${button.id}" is enabled.`);
                     }
                 });
+
             }
 
-            // Periodically check the state of add buttons
-            setInterval(checkAddButtonsState, 1000);
+            // Call the function once to check the initial state
+            checkAddButtonsState();
 
-            // Example of adding an observer when button state changes
+            // Add a MutationObserver to monitor changes in the `disabled` attribute
             addButtons.forEach(button => {
-                button.addEventListener("click", () => {
-                    console.log(`Button ${button.id} clicked. Current state: ${!button.disabled ? "enabled" : "disabled"}`);
+                const observer = new MutationObserver(() => {
+                    checkAddButtonsState(); // Recheck the state whenever any button changes
                 });
+
+                observer.observe(button, { attributes: true }); // Observe attribute changes only
             });
         });
 
@@ -340,6 +368,17 @@
             width: 181px
         }
 
+        .nav-center {
+            display: block;
+            justify-content: left;
+            margin-left: 50px;
+        }
+
+        sup {
+            font-weight: normal; 
+            font-size: 10px;
+        }
+
     </style>
 </head>
 <body>
@@ -354,13 +393,13 @@
             </div>
             <div class="nav-right">
                 <button class="nav-button" style="height: 66px; width: 120px;" onclick="openHelpModal()">Help</button>
-                <button class="nav-button" style="height: 66px; width: 120px;" onclick="window.location.href='index.html'">Return</button>
+                <!-- <button class="nav-button" style="height: 66px; width: 120px;" onclick="window.location.href='index.html'">Return</button> -->
                 <button class="nav-button" style="height: 66px; width: 120px;" onclick="resetLocalStorage(); window.location.href='index.html'">Cancel</button>
             </div>
             
         </nav>
         <div class="site-info">
-            ZKM Gdynia Tickets: Transit Card: Reduced Monthly Ticket
+            ZKM Gdynia Tickets: Transit Card: Reduced Monthly Name Ticket
         </div>
         <main class="content">
 
@@ -370,8 +409,8 @@
                     <tr>
                         <th colspan="2"><text class="row title">Gdynia</text></th>
                         <th><text class="row title">One Area<sup>1)</sup></text></th>
-                        <th><text class="row title">All Areas<sup>2)</sup></text></th>
-                        <th><text class="row title">Communication Network<sup>3)</sup></text></th>
+                        <th><text class="row title">All Areas<sup style="font-weight: normal;">2)</sup></text></th>
+                        <th><text class="row title">Communication Network<sup style="font-weight: normal;">3)</sup></text></th>
                     </tr>
                     <tr>
                         <th><text class="row subtext">Regular and Night Lines</text></th>
@@ -413,28 +452,28 @@
                     <tr>
                         <td><div class="row type">Reduced 51,50 PLN</div>
                             <div class="row">
-                                <div class="button add-button-id" id="Gdansk+Sopot" >+</div>
+                                <div class="button add-button-id" id="Gdynia - Regular and Night Lines" >+</div>
                                 <div class="button">-</div>
                             </div></td>
                         <td><div class="row type">Reduced 57,50 PLN</div>
                             <div class="row">
-                                <div class="button add-button-id" id="Gdansk+Sopot" >+</div>
+                                <div class="button add-button-id" id="Gdynia - Regular, Express and Night Lines"  >+</div>
                                 <div class="button">-</div>
                             </div></td>
                         <td><div class="row type">Reduced 40,50 PLN</div>
                             <div class="row">
-                                <div class="button add-button-id" id="Sopot+Gdynia" >+</div>
+                                <div class="button add-button-id" id="One Area - Regular, Express and Night Lines" >+</div>
                                 <div class="button">-</div>
                             </div></td>
                         <td><div class="row type">Reduced 54,00 PLN</div>
                             <div class="row">
-                                <div class="button add-button-id" id="One provider network" >+</div>
+                                <div class="button add-button-id" id="All Areas - Regular, Express and Night Lines" >+</div>
                                 <div class="button">-</div>
                             </div></td>
                             <td>
                                 <div class="row type">Reduced 63,00 PLN</div>
                             <div class="row">
-                                <div class="button add-button-id" id="MZKZG area">+</div>
+                                <div class="button add-button-id" id="Communication Network - Regular, Express and Night Lines">+</div>
                                 <div class="button">-</div>
                             </div>
                             </td>
